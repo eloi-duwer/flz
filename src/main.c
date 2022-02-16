@@ -48,8 +48,7 @@ void registerWindowMove() {
 	XSelectInput(g_dis, g_root, SubstructureNotifyMask);
 }
 
-void handleCtrlDown(t_open_state *state) {
-	state->ctrl_down = true;
+void handleOpenSnap(t_open_state *state) {
 	if (!state->opened && state->configuring && state->ctrl_down) {
 		state->opened = true;
 		printf("Open\n");
@@ -72,6 +71,7 @@ void handleButtonRelease(t_open_state *state) {
 	state->configuring = false;
 	if (state->opened) {
 		state->opened = false;
+        state->has_configured = true;
 		curr_focus_window = getActiveWindow();
 		snap_window(curr_focus_window);
 		closeOverlay();
@@ -82,7 +82,7 @@ void handleMouseMotion(XGenericEventCookie *cookie) {
 	t_pos pos;
 
 	getCursorPos(&pos);
-	printf("Motion %d %d\n", pos.x, pos.y);
+	// printf("Motion %d %d\n", pos.x, pos.y);
 }
 
 void loop() {
@@ -100,7 +100,8 @@ void loop() {
 				if (cookie->evtype == XI_RawKeyPress
 					&& (((XIRawEvent *)cookie->data)->detail == ctrll
 						|| ((XIRawEvent *)cookie->data)->detail == ctrlr)) {
-							handleCtrlDown(&state);
+                            state.ctrl_down = true;
+							handleOpenSnap(&state);
 				}
 				if (cookie->evtype == XI_RawKeyRelease
 					&& (((XIRawEvent *)cookie->data)->detail == ctrll
@@ -123,7 +124,12 @@ void loop() {
 			}
 		}
 		if (ev.type == ConfigureNotify) {
-			state.configuring = true;
+            if (state.has_configured) {
+                state.has_configured = false;
+            } else {
+			    state.configuring = true;
+                handleOpenSnap(&state);
+            }
 		}
 		XFreeEventData(g_dis, cookie);
 	}

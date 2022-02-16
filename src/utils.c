@@ -65,3 +65,22 @@ void getCursorPos(t_pos *ret_pos) {
 
 	XQueryPointer(g_dis, g_root, &_root, &_win, &ret_pos->x, &ret_pos->y, &_x, &_y, &_mask);
 }
+
+void getPropertyValue(Window win, char *propname, long max_length, unsigned long *nitems_return, unsigned char **prop_return)
+{
+	int result;
+	Atom property;
+	Atom actual_type_return;
+	int actual_format_return;
+	unsigned long bytes_after_return;
+
+	property = XInternAtom(g_dis, propname, True);
+
+	result = XGetWindowProperty(g_dis, win, property, 0,	/* offset */
+                max_length,	/* length */
+                False,	/* delete */
+                AnyPropertyType,	/* req_type */
+                &actual_type_return,
+                &actual_format_return,
+                nitems_return, &bytes_after_return, prop_return);
+}

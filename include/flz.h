@@ -32,9 +32,10 @@ extern const unsigned int zone_count;
 # endif
 
 typedef struct  s_open_state {
-  bool	ctrl_down;
+    bool	ctrl_down;
 	bool	configuring;
 	bool	opened;
+    bool    has_configured;
 }               t_open_state;
 
 typedef struct  s_pos {
@@ -52,9 +53,10 @@ Window        getActiveWindow();
 int           getCurrDisplayWidth();
 int           getCurrDisplayHeight();
 void          getCursorPos(t_pos *ret_pos);
-void          snap_window();
+void          getPropertyValue(Window win, char *propname, long max_length, unsigned long *nitems_return, unsigned char **prop_return);
 
 // window_positions.c
+void          snap_window();
 
 
 #endif
