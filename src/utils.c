@@ -84,3 +84,25 @@ void getPropertyValue(Window win, char *propname, long max_length, unsigned long
                 &actual_format_return,
                 nitems_return, &bytes_after_return, prop_return);
 }
+
+void print_window_childs(Window win, int depth) {
+    Window root;
+    Window parent;
+    Window *childs;
+    unsigned int nchilds;
+    XTextProperty text;
+
+    XQueryTree(g_dis, win, &root, &parent, &childs, &nchilds);
+    if (childs) {
+        int i = 0;
+        while (i < nchilds) {
+            XGetWMName(g_dis, win, &text);
+            printf("%*s", depth, "");
+            printf("| ");
+            printf("Child %lx: %s \n", childs[i], text.value);
+            print_window_childs(childs[i], depth + 2);
+            i++;
+        }
+        XFree(childs);
+    }
+}

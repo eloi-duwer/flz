@@ -27,6 +27,13 @@ Window root_window(Window win) {
     }
     XQueryTree(g_dis, win, &root, &parent, &childs, &nchilds);
     if (childs) {
+        int i = 0;
+        while (i < nchilds) {
+            XGetWMName(g_dis, win, &text);
+            printf("| Child %lx: %s \n", childs[i], text.value);
+            print_window_childs(childs[i], 2);
+            i++;
+        }
         XFree(childs);
     }
     if (parent && parent != root) {
@@ -55,6 +62,8 @@ void  snap_window(Window win) {
   // maybe xcb is better https://www.systutorials.com/docs/linux/man/3-xcb_get_geometry_reply/
   // Try to get the same values as xwininfo on -geometry https://gitlab.freedesktop.org/xorg/app/xwininfo/-/blob/master/xwininfo.c
   // Find a way to know if we need to find root window or not to actually move the window
+  // TODO check what xdotools does
+  // It looks like we're using the same window Ids, so the method used for resizing might be the solution (xdo_set_window_size, zdo_set_window_pos & xdo_move_window)
   XGetGeometry(g_dis, win, &_useless_too, &x_return, &y_return, &_useless, &_useless, &_useless, &_useless);
   printf("%d, %d\n", x_return, y_return);
   XMoveResizeWindow(g_dis, win, win_group * slice_size, 0, slice_size, 1390);
