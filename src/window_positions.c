@@ -50,11 +50,12 @@ void  snap_window(Window win) {
   win = root_window(win);
   int x_return;
   int y_return;
-  char lol;
+  unsigned int _useless;
+  Window _useless_too;
   // maybe xcb is better https://www.systutorials.com/docs/linux/man/3-xcb_get_geometry_reply/
   // Try to get the same values as xwininfo on -geometry https://gitlab.freedesktop.org/xorg/app/xwininfo/-/blob/master/xwininfo.c
   // Find a way to know if we need to find root window or not to actually move the window
-  XGetGeometry(g_dis, win, &lol, &x_return, &y_return, &lol, &lol, &lol, &lol);
+  XGetGeometry(g_dis, win, &_useless_too, &x_return, &y_return, &_useless, &_useless, &_useless, &_useless);
   printf("%d, %d\n", x_return, y_return);
   XMoveResizeWindow(g_dis, win, win_group * slice_size, 0, slice_size, 1390);
   printf("Snap to %d %d %d %d\n", win_group * slice_size, xy.y, slice_size, wh.y);
