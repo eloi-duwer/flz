@@ -138,7 +138,7 @@ void loop() {
 void getDefaults() {
 	g_dis = XOpenDisplay(NULL);
 	g_screen = XDefaultScreen(g_dis);
-	g_root = DefaultRootWindow(g_dis);
+	g_root = XDefaultRootWindow(g_dis);
 
 	// Test for XInput 2 extension
 	int queryEvent, queryError;

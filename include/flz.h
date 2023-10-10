@@ -15,7 +15,7 @@
 #ifdef DEFINE_CONST
   const double	g_alpha = 0.2;
   const char		*g_base_color = "#ffffff";
-  const unsigned int zone_count = 5;
+  const unsigned int zone_count = 3;
   // Globals
   Display       *g_dis;
   GC	          g_gc;

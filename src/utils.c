@@ -99,7 +99,7 @@ void print_window_childs(Window win, int depth) {
             XGetWMName(g_dis, win, &text);
             printf("%*s", depth, "");
             printf("| ");
-            printf("Child %lx: %s \n", childs[i], text.value);
+            printf("Child %ld: %s \n", childs[i], text.value);
             print_window_childs(childs[i], depth + 2);
             i++;
         }
