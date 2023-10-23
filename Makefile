@@ -3,7 +3,8 @@ NAME = flz
 SRCF = ./src/
 SRC_NAME = main.c \
 	utils.c \
-	window_positions.c
+	window_positions.c \
+	overlay.c
 
 OBJF = ./obj/
 OBJS = $(addprefix $(OBJF), $(SRC_NAME:.c=.o))

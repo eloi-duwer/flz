@@ -70,5 +70,8 @@ void          print_window_childs(Window win, int depth);
 // window_positions.c
 void          snap_window(Window win, int *n_configured);
 
+// overlay.c
+Display *openOverlay();
+void closeOverlay();
 
 #endif
