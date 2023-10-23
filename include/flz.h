@@ -47,6 +47,13 @@ typedef struct  s_pos {
   int y;
 }               t_pos;
 
+typedef struct  s_margins {
+  unsigned long left;
+  unsigned long top;
+  unsigned long right;
+  unsigned long bottom;
+}               t_margins;
+
 // utils.c
 unsigned long getColor(const char *colorString);
 void          setAbove();

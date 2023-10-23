@@ -12,14 +12,23 @@ static void    getWorkableArea(t_pos *xy, t_pos *wh) {
     wh->y = coords[3] - xy->y;
 }
 
-static void getWindowMargins(Window win) {
+static void getWindowMargins(Window win, t_margins *margins) {
     unsigned long nitems;
     unsigned char *prop;
     getPropertyValue(win, "_GTK_FRAME_EXTENTS", 4, &nitems, &prop);
     if (nitems == 0) {
+        margins->left = 0;
+        margins->right = 0;
+        margins->top = 0;
+        margins->bottom = 0;
     } else {
         unsigned long *nums = (unsigned long *)prop;
+        margins->left = nums[0];
+        margins->right = nums[1];
+        margins->top = nums[2];
+        margins->bottom = nums[3];
     }
+    printf("Margins: l: %lu, t: %lu, r: %lu, b: %lu\n", margins->left, margins->top, margins->right, margins->bottom);
 }
 
 Window root_window(Window win) {
@@ -72,11 +81,12 @@ int get_parent_window (Window win, Window *ret_win) {
 
 void snap_to_with_parents(int *n_configured, Window win, int x, int y, int width, int height) {
     Window parent;
+    t_margins margins;
 
     (*n_configured)++;
+    getWindowMargins(win, &margins);
     printf("Snaping %ld to %d %d %d %d\n", win, x, y, width, height);
-    getWindowMargins(win);
-    XMoveResizeWindow(g_dis, win, x, y, width, height);
+    XMoveResizeWindow(g_dis, win, x - margins.right, y - margins.top, width + margins.right + margins.left, height + margins.top + margins.bottom);
     if (get_parent_window(win, &parent) == 0 && *n_configured < 10) {
         snap_to_with_parents(n_configured, parent, x, y, width, height);
     }
