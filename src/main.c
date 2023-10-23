@@ -6,6 +6,7 @@ void registerXInput2() {
 	m.deviceid = XIAllMasterDevices;
 	m.mask_len = XIMaskLen(XI_LASTEVENT);
 	m.mask = calloc(m.mask_len, sizeof(char));
+	// We want to get notified by key press, key release, button press, button release, mouse motion
 	XISetMask(m.mask, XI_RawKeyPress);
 	XISetMask(m.mask, XI_RawKeyRelease);
 	XISetMask(m.mask, XI_RawButtonPress);
@@ -17,10 +18,12 @@ void registerXInput2() {
 }
 
 void registerWindowMove() {
+	// Get notified when a window is reconfigured (= moved/resized)
 	XSelectInput(g_dis, g_root, SubstructureNotifyMask);
 }
 
 void handleOpenSnap(t_open_state *state) {
+	// Open the overlay only if we're not already & if we're configuring while ctrl is down
 	if (!state->opened && state->configuring && state->ctrl_down) {
 		state->opened = true;
 		printf("Open\n");
@@ -73,30 +76,38 @@ void loop() {
 				if (cookie->evtype == XI_RawKeyPress
 					&& (((XIRawEvent *)cookie->data)->detail == ctrll
 						|| ((XIRawEvent *)cookie->data)->detail == ctrlr)) {
+							// Pressing ctrl right or left
                             state.ctrl_down = true;
 							handleOpenSnap(&state);
 				}
 				if (cookie->evtype == XI_RawKeyRelease
 					&& (((XIRawEvent *)cookie->data)->detail == ctrll
 						|| ((XIRawEvent *)cookie->data)->detail == ctrlr)) {
+							// Releasing crtl right or left
 							handleCtrlUp(&state);
 				}
 				if (cookie->evtype == XI_RawButtonPress
 					&& (((XIRawEvent *)cookie->data)->detail == Button1
 						|| ((XIRawEvent *)cookie->data)->detail == Button3)) {
+							// Left or Right mouse click
 							// No op ?
 				}
 				if (cookie->evtype == XI_RawButtonRelease
 					&& (((XIRawEvent *)cookie->data)->detail == Button1
 						|| ((XIRawEvent *)cookie->data)->detail == Button3)) {
+							// Left or Right mouse release
 							handleButtonRelease(&state);
 				}
 				if (cookie->evtype == XI_RawMotion && state.opened) {
+					// Mouse moved
 					handleMouseMotion(cookie);
 				}
 			}
 		}
 		if (ev.type == ConfigureNotify) {
+			// Configuring (= We're moving or resizing the window)
+			// Since we end up moving/resizing windows ourselves, we want to skip the next n events after a snap
+			// (We need to move the window + all it's parents, so it can send multiple configure events)
 			if (state.n_configuring > 0) {
 				state.n_configuring--;
 			} else {
