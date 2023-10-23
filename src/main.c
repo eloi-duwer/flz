@@ -70,10 +70,11 @@ void handleButtonRelease(t_open_state *state) {
 
 	state->configuring = false;
 	if (state->opened) {
+		printf("Close\n");
 		state->opened = false;
-        state->has_configured = true;
+		state->n_configuring++;
 		curr_focus_window = getActiveWindow();
-		snap_window(curr_focus_window);
+		snap_window(curr_focus_window, &state->n_configuring);
 		closeOverlay();
 	}
 }
@@ -124,12 +125,12 @@ void loop() {
 			}
 		}
 		if (ev.type == ConfigureNotify) {
-            if (state.has_configured) {
-                state.has_configured = false;
-            } else {
-			    state.configuring = true;
-                handleOpenSnap(&state);
-            }
+			if (state.n_configuring > 0) {
+				state.n_configuring--;
+			} else {
+				state.configuring = true;
+				handleOpenSnap(&state);
+			}
 		}
 		XFreeEventData(g_dis, cookie);
 	}

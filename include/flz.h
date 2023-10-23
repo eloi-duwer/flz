@@ -36,10 +36,10 @@
 #endif
 
 typedef struct  s_open_state {
-    bool	ctrl_down;
+  bool	ctrl_down;
 	bool	configuring;
 	bool	opened;
-    bool    has_configured;
+  int   n_configuring;
 }               t_open_state;
 
 typedef struct  s_pos {
@@ -61,7 +61,7 @@ void          getPropertyValue(Window win, char *propname, long max_length, unsi
 void          print_window_childs(Window win, int depth);
 
 // window_positions.c
-void          snap_window();
+void          snap_window(Window win, int *n_configured);
 
 
 #endif

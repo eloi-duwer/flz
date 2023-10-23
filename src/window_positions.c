@@ -17,10 +17,8 @@ static void getWindowMargins(Window win) {
     unsigned char *prop;
     getPropertyValue(win, "_GTK_FRAME_EXTENTS", 4, &nitems, &prop);
     if (nitems == 0) {
-        printf("Can't find margins\n");
     } else {
         unsigned long *nums = (unsigned long *)prop;
-        printf("margins: %lu %lu %lu %lu\n", nums[0], nums[1], nums[2], nums[3]);
     }
 }
 
@@ -72,39 +70,30 @@ int get_parent_window (Window win, Window *ret_win) {
     return 1;
 }
 
-void print_attributes(Window win) {
-    XWindowAttributes attrs;
-
-    XGetWindowAttributes(g_dis, win, &attrs);
-    printf("Window attributes after placement (relative to its parent): x %d y %d w %d h %d\n", attrs.x, attrs.y, attrs.width, attrs.height);
-}
-
-void snap_to_with_parents(Window win, int x, int y, int width, int height) {
+void snap_to_with_parents(int *n_configured, Window win, int x, int y, int width, int height) {
     Window parent;
 
+    (*n_configured)++;
     printf("Snaping %ld to %d %d %d %d\n", win, x, y, width, height);
     getWindowMargins(win);
-    print_attributes(win);
     XMoveResizeWindow(g_dis, win, x, y, width, height);
-    if (get_parent_window(win, &parent) == 0) {
-        snap_to_with_parents(parent, x, y, width, height);
+    if (get_parent_window(win, &parent) == 0 && *n_configured < 10) {
+        snap_to_with_parents(n_configured, parent, x, y, width, height);
     }
 }
 
-void  snap_window(Window win) {
-  t_pos		pos;
-  int       slice_size;
-  int       win_group;
-  t_pos     xy;
-  t_pos     wh;
+void  snap_window(Window win, int *n_configured) {
+    t_pos		pos;
+    int       slice_size;
+    int       win_group;
+    t_pos     xy;
+    t_pos     wh;
 
-  getCursorPos(&pos);
-  getWorkableArea(&xy, &wh);
+    getCursorPos(&pos);
+    getWorkableArea(&xy, &wh);
 
-  slice_size = wh.x / zone_count;
-  win_group = pos.x / slice_size;
+    slice_size = wh.x / zone_count;
+    win_group = pos.x / slice_size;
 
-  // win = root_window(win);
-
-    snap_to_with_parents(win,  win_group * slice_size, 0, slice_size, wh.y);
+    snap_to_with_parents(n_configured, win, win_group * slice_size, 0, slice_size, wh.y);
 }
