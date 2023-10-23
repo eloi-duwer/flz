@@ -12,6 +12,18 @@ static void    getWorkableArea(t_pos *xy, t_pos *wh) {
     wh->y = coords[3] - xy->y;
 }
 
+static void getWindowMargins(Window win) {
+    unsigned long nitems;
+    unsigned char *prop;
+    getPropertyValue(win, "_GTK_FRAME_EXTENTS", 4, &nitems, &prop);
+    if (nitems == 0) {
+        printf("Can't find margins\n");
+    } else {
+        unsigned long *nums = (unsigned long *)prop;
+        printf("margins: %lu %lu %lu %lu\n", nums[0], nums[1], nums[2], nums[3]);
+    }
+}
+
 Window root_window(Window win) {
     Window root;
     Window parent;
@@ -71,9 +83,9 @@ void snap_to_with_parents(Window win, int x, int y, int width, int height) {
     Window parent;
 
     printf("Snaping %ld to %d %d %d %d\n", win, x, y, width, height);
-    XMoveResizeWindow(g_dis, win, x, y, width, height);
+    getWindowMargins(win);
     print_attributes(win);
-
+    XMoveResizeWindow(g_dis, win, x, y, width, height);
     if (get_parent_window(win, &parent) == 0) {
         snap_to_with_parents(parent, x, y, width, height);
     }
