@@ -13,38 +13,38 @@
 #include <stdlib.h>
 
 #ifdef DEFINE_CONST
-  const double	g_alpha = 0.2;
-  const char		*g_base_color = "#ffffff";
-  const unsigned int zone_count = 3;
-  // Globals
-  Display       *g_dis;
-  GC	          g_gc;
-  Window        g_win;
-  Window	      g_root;
-  int	          g_screen;
-  int	          g_xiOpcode;
+    const double  g_alpha = 0.2;
+    const char    *g_base_color = "#ffffff";
+    const unsigned int    zone_count = 3;
+    // Globals
+    Display       *g_dis;
+    GC            g_gc;
+    Window        g_win;
+    Window        g_root;
+    int           g_screen;
+    int           g_xiOpcode;
 #else
-  extern const double g_alpha;
-  extern const char   *g_base_color;
-  extern const unsigned int zone_count;
-  extern Display       *g_dis;
-  extern GC	          g_gc;
-  extern Window        g_win;
-  extern Window	      g_root;
-  extern int	          g_screen;
-  extern int	          g_xiOpcode;
+    extern const double g_alpha;
+    extern const char   *g_base_color;
+    extern const unsigned int zone_count;
+    extern Display      *g_dis;
+    extern GC           g_gc;
+    extern Window       g_win;
+    extern Window       g_root;
+    extern int          g_screen;
+    extern int          g_xiOpcode;
 #endif
 
 typedef struct  s_open_state {
-  bool	ctrl_down;
-	bool	configuring;
-	bool	opened;
-  int   n_configuring;
+    bool    ctrl_down;
+    bool    configuring;
+    bool    opened;
+    int     n_configuring;
 }               t_open_state;
 
 typedef struct  s_pos {
-  int x;
-  int y;
+    int x;
+    int y;
 }               t_pos;
 
 typedef struct  s_margins {

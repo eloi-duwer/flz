@@ -13,8 +13,8 @@ static void    getWorkableArea(t_pos *xy, t_pos *wh) {
 }
 
 static void getWindowMargins(Window win, t_margins *margins) {
-    unsigned long nitems;
-    unsigned char *prop;
+    unsigned long   nitems;
+    unsigned char   *prop;
     getPropertyValue(win, "_GTK_FRAME_EXTENTS", 4, &nitems, &prop);
     if (nitems == 0) {
         margins->left = 0;
@@ -32,10 +32,10 @@ static void getWindowMargins(Window win, t_margins *margins) {
 }
 
 Window root_window(Window win) {
-    Window root;
-    Window parent;
-    Window *childs;
-    unsigned int nchilds;
+    Window  root;
+    Window  parent;
+    Window  *childs;
+    unsigned int    nchilds;
 
     XTextProperty text;
     XGetWMName(g_dis, win, &text);
@@ -62,10 +62,10 @@ Window root_window(Window win) {
 }
 
 int get_parent_window (Window win, Window *ret_win) {
-    Window root;
-    Window parent;
-    Window *childs;
-    unsigned int nchilds;
+    Window  root;
+    Window  parent;
+    Window  *childs;
+    unsigned int    nchilds;
 
     XQueryTree(g_dis, win, &root, &parent, &childs, &nchilds);
 
@@ -80,8 +80,8 @@ int get_parent_window (Window win, Window *ret_win) {
 }
 
 void snap_to_with_parents(int *n_configured, Window win, int x, int y, int width, int height) {
-    Window parent;
-    t_margins margins;
+    Window  parent;
+    t_margins   margins;
 
     (*n_configured)++;
     getWindowMargins(win, &margins);
@@ -93,11 +93,11 @@ void snap_to_with_parents(int *n_configured, Window win, int x, int y, int width
 }
 
 void  snap_window(Window win, int *n_configured) {
-    t_pos		pos;
-    int       slice_size;
-    int       win_group;
-    t_pos     xy;
-    t_pos     wh;
+    t_pos   pos;
+    int slice_size;
+    int win_group;
+    t_pos   xy;
+    t_pos   wh;
 
     getCursorPos(&pos);
     getWorkableArea(&xy, &wh);
