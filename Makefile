@@ -1,31 +1,23 @@
-NAME = flz
 
-SRCF = ./src/
-SRC_NAME = main.c \
-	utils.c \
-	window_positions.c \
-	overlay.c
 
-OBJF = ./obj/
-OBJS = $(addprefix $(OBJF), $(SRC_NAME:.c=.o))
+all : flz flz-config
 
-CC = gcc
-CFLAGS = -I./include
-LDFLAGS = -lX11 -lXfixes -lXi
+flz : FORCE
+	cd flz && $(MAKE) all
 
-all : $(NAME)
+flz-config : FORCE
+	cd flz-config && $(MAKE) all
 
-$(NAME) : $(OBJS)
-	$(CC) -o $(NAME) $(OBJS) $(LDFLAGS)
+clean : FORCE
+	cd flz && $(MAKE) clean
+	cd flz-config && $(MAKE) clean
 
-$(OBJF)%.o : $(SRCF)%.c
-	@mkdir -p $(@D)
-	$(CC) -o $@ $(CFLAGS) -c $(addprefix $(SRCF), $*.c)
+fclean : FORCE
+	cd flz && $(MAKE) fclean
+	cd flz-config && $(MAKE) fclean
 
-clean :
-	rm -rf $(OBJS)
+re : FORCE
+	cd flz && $(MAKE) re
+	cd flz-config && $(MAKE) re
 
-fclean : clean
-	rm -rf $(NAME)
-
-re : fclean all
+FORCE: ;
