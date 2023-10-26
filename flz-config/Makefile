@@ -3,7 +3,8 @@ NAME = flz-config
 BIN = ../bin/$(NAME)
 
 SRCF = ./src/
-SRC_NAME = main.c
+SRC_NAME = main.c \
+	utils.c
 
 OBJF = ./obj/
 OBJS = $(addprefix $(OBJF), $(SRC_NAME:.c=.o))
