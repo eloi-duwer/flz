@@ -13,8 +13,11 @@
 #include <stdlib.h>
 #include <X11/XKBlib.h>
 
+#define NO_WINDOW (Window)0
+
 #ifdef DEFINE_CONST
-    const double  g_alpha = 0.5;
+    const double    g_alpha = 0.9;
+    const int       g_margin = 20;
     // Globals
     Display *g_dis;
     GC      g_gc;
@@ -32,6 +35,30 @@
     extern int      g_screen;
     extern Visual   *g_vis;
 #endif
+
+typedef enum    e_split_type {
+    NONE,
+    VERTICAL,
+    HORIZONTAL
+}               split_type;
+
+typedef enum    e_window_type {
+    ALL,
+    TOP,
+    BOTTOM,
+    LEFT,
+    RIGHT
+}               window_type;
+typedef struct  s_conf {
+    Window          win;
+    window_type     window_type;
+    Window          resize;
+    split_type      split_type;
+    float           percent;
+    struct s_conf   *parent;
+    struct s_conf   *left;
+    struct s_conf   *right;
+}               t_conf;
 
 // utils.c
 unsigned long getColor(const char *colorString);

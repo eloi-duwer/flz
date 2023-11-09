@@ -5,6 +5,8 @@
     "editor.stickyTabStops": true,
     "files.associations": {
         "flz.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "xfixes.h": "c",
+        "xos.h": "c"
     }
 }
