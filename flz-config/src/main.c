@@ -74,6 +74,9 @@ Window create_win(Window parent, split_type split, float start_percent, float en
     int actual_y = y;
     int actual_width = width * (end_percent - start_percent);
     int actual_height = height;
+    if (actual_width < g_min_size || actual_height < g_min_size) {
+        return NO_WINDOW;
+    }
     printf("Creating window with parent %lu: x %d y %d w %d h %d\n", parent, actual_x, actual_y, actual_width, actual_height);
 
     win = XCreateWindow(g_dis, parent,
@@ -110,14 +113,38 @@ void print_conf(t_conf *conf, int depth, char *lr) {
     }
 }
 
-void redraw_windows(t_conf *conf) {
+bool redraw_windows(t_conf *conf) {
     if (conf->left != NULL) {
         conf->left->win = create_win(conf->win, conf->split_type, 0.0f, conf->percent);
+        if (conf->left->win == NO_WINDOW) {
+            return false;
+        }
         redraw_windows(conf->left);
     }
     if (conf->right != NULL) {
         conf->right->win = create_win(conf->win, conf->split_type, conf->percent, 1.0f);
+        if (conf->right->win == NO_WINDOW) {
+            return false;
+        }
         redraw_windows(conf->right);
+    }
+    return true;
+}
+
+void clean_subwindows(t_conf *conf, bool is_root) {
+    if (conf->left) {
+        clean_subwindows(conf->left, false);
+        free(conf->left);
+        conf->left = NULL;
+    }
+    if (conf->right) {
+        clean_subwindows(conf->right, false);
+        free(conf->right);
+        conf->right = NULL;
+    }
+    if (conf->win != NO_WINDOW && !is_root) {
+        XDestroyWindow(g_dis, conf->win);
+        conf->win = NO_WINDOW;
     }
 }
 
@@ -137,7 +164,9 @@ void splitWindow(t_conf *conf_root, Window target_win) {
     conf->right->parent = conf;
     conf->left->window_type = LEFT;
     conf->right->window_type = RIGHT;
-    redraw_windows(conf);
+    if (!redraw_windows(conf)) {
+        clean_subwindows(conf, true);
+    }
 }
 
 void loop() {

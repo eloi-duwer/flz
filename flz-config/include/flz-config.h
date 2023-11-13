@@ -18,6 +18,7 @@
 #ifdef DEFINE_CONST
     const double    g_alpha = 0.9;
     const int       g_margin = 20;
+    const int       g_min_size = 100;
     // Globals
     Display *g_dis;
     GC      g_gc;
@@ -28,6 +29,8 @@
     Visual  *g_vis;
 #else
     extern const double g_alpha;
+    extern const int    g_margin;
+    extern const int    g_min_size;
     extern Display  *g_dis;
     extern GC       g_gc;
     extern Window   g_win;
