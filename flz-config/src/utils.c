@@ -89,3 +89,41 @@ void print_window_childs(Window win, int depth) {
         XFree(childs);
     }
 }
+
+void print_conf(t_conf *conf, int depth, char *lr) {
+    printf("%*s|-> %s Window %ld\n", 2 * depth, "", lr, conf->win);
+    if (conf->left != NULL) {
+        print_conf(conf->left, depth + 1, "Left ");
+    }
+    if (conf->right != NULL) {
+        print_conf(conf->right, depth + 1, "Right");
+    }
+}
+
+void    getWindowDimensions(Window win, t_window_pos *pos) {
+    XWindowAttributes attrs;
+
+    XGetWindowAttributes(g_dis, win, &attrs);
+    pos->x = attrs.x;
+    pos->y = attrs.y;
+    pos->w = attrs.width;
+    pos->h = attrs.height;
+}
+
+void calcWindowNeededDimensions(Window parent, split_type split, float start_percent, float end_percent, t_window_pos *pos) {
+    t_window_pos parent_pos;
+    getWindowDimensions(parent, &parent_pos);
+
+    // Positions are relative to parent
+    if (split == VERTICAL) {
+        pos->x = parent_pos.w * start_percent;
+        pos->y = 0;
+        pos->w = parent_pos.w * (end_percent - start_percent);
+        pos->h = parent_pos.h;
+    } else {
+        pos->x = 0;
+        pos->y = parent_pos.h * start_percent;
+        pos->w = parent_pos.w;
+        pos->h = parent_pos.h * (end_percent - start_percent);
+    }
+}

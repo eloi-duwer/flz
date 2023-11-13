@@ -71,14 +71,17 @@ typedef struct  s_window_pos {
 }               t_window_pos;
 
 // utils.c
-unsigned long getColor(const char *colorString);
-void          setAbove();
-void          removeWindowInterface();
-void          setTransparent(const double alpha);
-Window        getActiveWindow();
-int           getCurrDisplayWidth();
-int           getCurrDisplayHeight();
-void          getPropertyValue(Window win, char *propname, long max_length, unsigned long *nitems_return, unsigned char **prop_return);
-void          print_window_childs(Window win, int depth);
+unsigned long   getColor(const char *colorString);
+void            setAbove();
+void            removeWindowInterface();
+void            setTransparent(const double alpha);
+Window          getActiveWindow();
+int             getCurrDisplayWidth();
+int             getCurrDisplayHeight();
+void            getPropertyValue(Window win, char *propname, long max_length, unsigned long *nitems_return, unsigned char **prop_return);
+void            print_window_childs(Window win, int depth);
+void            print_conf(t_conf *conf, int depth, char *lr);
+void            getWindowDimensions(Window win, t_window_pos *pos);
+void            calcWindowNeededDimensions(Window parent, split_type split, float start_percent, float end_percent, t_window_pos *pos);
 
 #endif
