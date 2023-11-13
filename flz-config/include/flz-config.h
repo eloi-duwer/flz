@@ -16,7 +16,7 @@
 #define NO_WINDOW (Window)0
 
 #ifdef DEFINE_CONST
-    const double    g_alpha = 0.9;
+    const double    g_alpha = 0.2;
     const int       g_margin = 20;
     const int       g_min_size = 100;
     // Globals
@@ -62,6 +62,13 @@ typedef struct  s_conf {
     struct s_conf   *left;
     struct s_conf   *right;
 }               t_conf;
+
+typedef struct  s_window_pos {
+    int x;
+    int y;
+    int w;
+    int h;
+}               t_window_pos;
 
 // utils.c
 unsigned long getColor(const char *colorString);

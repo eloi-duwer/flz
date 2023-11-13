@@ -48,39 +48,50 @@ void closeOverlay() {
     XDestroyWindow(g_dis, g_win);
 }
 
-static void    getWindowDimensions(Window win, int *dimensions) {
+static void    getWindowDimensions(Window win, t_window_pos *pos) {
     XWindowAttributes attrs;
 
     XGetWindowAttributes(g_dis, win, &attrs);
-    dimensions[0] = attrs.x;
-    dimensions[1] = attrs.y;
-    dimensions[2] = attrs.width;
-    dimensions[3] = attrs.height;
+    pos->x = attrs.x;
+    pos->y = attrs.y;
+    pos->w = attrs.width;
+    pos->h = attrs.height;
 }
+
+void calcWindowNeededDimensions(Window parent, split_type split, float start_percent, float end_percent, t_window_pos *pos) {
+    t_window_pos parent_pos;
+    getWindowDimensions(parent, &parent_pos);
+
+    // Positions are relative to parent
+    if (split == VERTICAL) {
+        pos->x = parent_pos.w * start_percent;
+        pos->y = 0;
+        pos->w = parent_pos.w * (end_percent - start_percent);
+        pos->h = parent_pos.h;
+    } else {
+        pos->x = 0;
+        pos->y = parent_pos.h * start_percent;
+        pos->w = parent_pos.w;
+        pos->h = parent_pos.h * (end_percent - start_percent);
+    }
+}
+
 
 Window create_win(Window parent, split_type split, float start_percent, float end_percent) {
     Window win;
     XSetWindowAttributes xwa = { .background_pixel = (double)rand(), .event_mask = KeyPressMask | ButtonPressMask };
-    int dimensions[4];
+    t_window_pos pos;
 
-    getWindowDimensions(parent, dimensions);
-    int x = dimensions[0];
-    int y = dimensions[1];
-    int width = dimensions[2];
-    int height = dimensions[3];
+    calcWindowNeededDimensions(parent, split, start_percent, end_percent, &pos);
 
-    // Positions are relative to parent
-    int actual_x = (width * start_percent);
-    int actual_y = y;
-    int actual_width = width * (end_percent - start_percent);
-    int actual_height = height;
-    if (actual_width < g_min_size || actual_height < g_min_size) {
+    if (pos.w < g_min_size || pos.h < g_min_size) {
+        printf("CANT CREATE WINDOW x %d y %d w %d h %d\n", pos.x, pos.y, pos.w, pos.h);
         return NO_WINDOW;
     }
-    printf("Creating window with parent %lu: x %d y %d w %d h %d\n", parent, actual_x, actual_y, actual_width, actual_height);
+    printf("Creating window with parent %lu: x %d y %d w %d h %d\n", parent, pos.x, pos.y, pos.w, pos.h);
 
     win = XCreateWindow(g_dis, parent,
-        actual_x, actual_y, actual_width, actual_height, 0,
+        pos.x, pos.y, pos.w, pos.h, 0,
         DefaultDepth(g_dis, g_screen), InputOutput,
         g_vis, CWEventMask | CWBackPixel , &xwa
     );
@@ -149,12 +160,16 @@ void clean_subwindows(t_conf *conf, bool is_root) {
 }
 
 void splitWindow(t_conf *conf_root, Window target_win) {
+    XkbStateRec keyboardState;
+    XkbGetState(g_dis, XkbUseCoreKbd, &keyboardState);
+    bool isCtrlPressed = keyboardState.mods & ControlMask;
+
     t_conf *conf = find_backing_conf(conf_root, target_win);
     if (conf == NULL) {
         dprintf(2, "Window clicked %ld is not in our repertoried list\n", target_win);
         return;
     }
-    conf->split_type = HORIZONTAL;
+    conf->split_type = isCtrlPressed ? HORIZONTAL: VERTICAL;
     conf->percent = 0.5f;
     conf->left = (t_conf *)malloc(sizeof(t_conf));
     conf->right = (t_conf *)malloc(sizeof(t_conf));
@@ -193,8 +208,8 @@ void loop() {
                 break;
             case ButtonPress:
                 printf("Clicked Window: %lu\n", ev.xbutton.window);
-                print_conf(&conf, 0, "root");
                 splitWindow(&conf, ev.xbutton.window);
+                print_conf(&conf, 0, "root");
                 break;
         }
     }
