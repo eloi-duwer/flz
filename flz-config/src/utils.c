@@ -93,10 +93,10 @@ void print_window_childs(Window win, int depth) {
 void print_conf(t_conf *conf, int depth, char *lr) {
     printf("%*s|-> %s Window %ld\n", 2 * depth, "", lr, conf->win);
     if (conf->left != NULL) {
-        print_conf(conf->left, depth + 1, "Left ");
+        print_conf(conf->left, depth + 1, conf->split_type == VERTICAL ? "Left  " : "Top   ");
     }
     if (conf->right != NULL) {
-        print_conf(conf->right, depth + 1, "Right");
+        print_conf(conf->right, depth + 1, conf->split_type == VERTICAL ? "Right " : "Bottom");
     }
 }
 
