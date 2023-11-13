@@ -125,10 +125,17 @@ void splitWindow(t_conf *conf_root, Window target_win) {
     XkbStateRec keyboardState;
     XkbGetState(g_dis, XkbUseCoreKbd, &keyboardState);
     bool isCtrlPressed = keyboardState.mods & ControlMask;
+    bool isShiftPressed = keyboardState.mods & ShiftMask;
 
     t_conf *conf = find_backing_conf(conf_root, target_win);
     if (conf == NULL) {
         dprintf(2, "Window clicked %ld is not in our repertoried list\n", target_win);
+        return;
+    }
+    if (isShiftPressed) {
+            if (conf->parent != NULL) {
+                clean_subwindows(conf->parent, true);
+            }
         return;
     }
     conf->split_type = isCtrlPressed ? HORIZONTAL: VERTICAL;
