@@ -153,28 +153,18 @@ void clean_subwindows(t_conf *conf, bool is_root) {
     }
 }
 
-void splitWindow(t_conf *conf_root, Window target_win) {
-    XkbStateRec keyboardState;
-    XkbGetState(g_dis, XkbUseCoreKbd, &keyboardState);
-    bool isCtrlPressed = keyboardState.mods & ControlMask;
-    bool isShiftPressed = keyboardState.mods & ShiftMask;
+void removeWindow(t_conf *conf) {
+    if (conf->parent != NULL) {
+        t_window_pos pos;
+        t_conf *parent = conf->parent;
+        getWindowDimensions(conf->parent->win, &pos);
+        clean_subwindows(conf->parent, true);
+        conf = NULL; // /!\ conf has been freed by clean_subwindows
+        draw_margins(parent, parent->win, pos.w, pos.h);
+    }
+}
 
-    t_conf *conf = find_backing_conf(conf_root, target_win);
-    if (conf == NULL) {
-        dprintf(2, "Window clicked %ld is not in our repertoried list\n", target_win);
-        return;
-    }
-    if (isShiftPressed) {
-            if (conf->parent != NULL) {
-                t_window_pos pos;
-                t_conf *parent = conf->parent;
-                getWindowDimensions(conf->parent->win, &pos);
-                clean_subwindows(conf->parent, true);
-                conf = NULL; // /!\ conf has been freed by clean_subwindows
-                draw_margins(parent, parent->win, pos.w, pos.h);
-            }
-        return;
-    }
+void splitWindow(t_conf *conf, bool isCtrlPressed) {
     conf->split_type = isCtrlPressed ? HORIZONTAL: VERTICAL;
     conf->percent = 0.5f;
     conf->left = (t_conf *)malloc(sizeof(t_conf));
@@ -188,6 +178,25 @@ void splitWindow(t_conf *conf_root, Window target_win) {
     if (!redraw_windows(conf)) {
         clean_subwindows(conf, true);
     }
+}
+
+void handleClick(t_conf *conf_root, Window target_win) {
+    XkbStateRec keyboardState;
+    XkbGetState(g_dis, XkbUseCoreKbd, &keyboardState);
+    bool isCtrlPressed = keyboardState.mods & ControlMask;
+    bool isShiftPressed = keyboardState.mods & ShiftMask;
+
+    t_conf *conf = find_backing_conf(conf_root, target_win);
+    if (conf == NULL) {
+        dprintf(2, "Window clicked %ld is not in our repertoried list\n", target_win);
+        return;
+    }
+    if (isShiftPressed) {
+        removeWindow(conf);
+    } else {
+        splitWindow(conf, isCtrlPressed);
+    }
+
 }
 
 void loop() {
@@ -214,7 +223,7 @@ void loop() {
                 break;
             case ButtonPress:
                 printf("Clicked Window: %lu\n", ev.xbutton.window);
-                splitWindow(&conf, ev.xbutton.window);
+                handleClick(&conf, ev.xbutton.window);
                 print_conf(&conf, 0);
                 break;
         }
