@@ -90,13 +90,21 @@ void print_window_childs(Window win, int depth) {
     }
 }
 
-void print_conf(t_conf *conf, int depth, char *lr) {
-    printf("%*s|-> %s Window %ld\n", 2 * depth, "", lr, conf->win);
+const static char *strs[] = {
+    "Root  ",
+    "Top   ",
+    "Bottom",
+    "Left  ",
+    "Right "
+};
+
+void print_conf(t_conf *conf, int depth) {
+    printf("%*s|-> %s Window %ld\n", 2 * depth, "", strs[conf->window_type], conf->win);
     if (conf->left != NULL) {
-        print_conf(conf->left, depth + 1, conf->split_type == VERTICAL ? "Left  " : "Top   ");
+        print_conf(conf->left, depth + 1);
     }
     if (conf->right != NULL) {
-        print_conf(conf->right, depth + 1, conf->split_type == VERTICAL ? "Right " : "Bottom");
+        print_conf(conf->right, depth + 1);
     }
 }
 
@@ -126,4 +134,44 @@ void calcWindowNeededDimensions(Window parent, split_type split, float start_per
         pos->w = parent_pos.w;
         pos->h = parent_pos.h * (end_percent - start_percent);
     }
+}
+
+bool is_on_top(t_conf *conf) {
+    if (conf->window_type == BOTTOM) {
+        return false;
+    }
+    if (conf->parent == NULL) {
+        return true;
+    }
+    return is_on_top(conf->parent);
+}
+
+bool is_on_bottom(t_conf *conf) {
+    if (conf->window_type == TOP) {
+        return false;
+    }
+    if (conf->parent == NULL) {
+        return true;
+    }
+    return is_on_bottom(conf->parent);
+}
+
+bool is_on_left(t_conf *conf) {
+    if (conf->window_type == RIGHT) {
+        return false;
+    }
+    if (conf->parent == NULL) {
+        return true;
+    }
+    return is_on_left(conf->parent);
+}
+
+bool is_on_right(t_conf *conf) {
+    if (conf->window_type == LEFT) {
+        return false;
+    }
+    if (conf->parent == NULL) {
+        return true;
+    }
+    return is_on_right(conf->parent);
 }

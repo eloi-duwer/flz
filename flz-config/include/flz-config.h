@@ -16,7 +16,7 @@
 #define NO_WINDOW (Window)0
 
 #ifdef DEFINE_CONST
-    const double    g_alpha = 0.2;
+    const double    g_alpha = 0.8;
     const int       g_margin = 20;
     const int       g_min_size = 100;
     // Globals
@@ -80,8 +80,13 @@ int             getCurrDisplayWidth();
 int             getCurrDisplayHeight();
 void            getPropertyValue(Window win, char *propname, long max_length, unsigned long *nitems_return, unsigned char **prop_return);
 void            print_window_childs(Window win, int depth);
-void            print_conf(t_conf *conf, int depth, char *lr);
+void            print_conf(t_conf *conf, int depth);
 void            getWindowDimensions(Window win, t_window_pos *pos);
 void            calcWindowNeededDimensions(Window parent, split_type split, float start_percent, float end_percent, t_window_pos *pos);
+bool            is_on_top(t_conf *conf);
+bool            is_on_bottom(t_conf *conf);
+bool            is_on_left(t_conf *conf);
+bool            is_on_right(t_conf *conf);
+
 
 #endif

@@ -12,6 +12,7 @@ static Window create_win_global() {
         g_vis, CWEventMask | CWBackPixel , &xwa
     );
     g_gc = XCreateGC(g_dis, g_win, 0, 0);
+    XSetLineAttributes(g_dis, g_gc, g_margin, LineSolid, CapRound, JoinMiter);
 
     setTransparent(g_alpha);
     removeWindowInterface();
@@ -48,9 +49,39 @@ void closeOverlay() {
     XDestroyWindow(g_dis, g_win);
 }
 
+void draw_margins(t_conf *conf, Window win, int w, int h) {
+    t_window_pos pos_margin = {
+        .x = 0 + g_margin / 2,
+        .y = 0 + g_margin / 2,
+        .w = w - g_margin / 2,
+        .h = h - g_margin / 2
+    };
+    printf("%d %d %d %d\n", is_on_top(conf), is_on_left(conf), is_on_bottom(conf), is_on_right(conf));
+    if (is_on_top(conf)) {
+        XDrawLine(g_dis, win, g_gc, 0, pos_margin.y, w, pos_margin.y);
+    } else {
+        XDrawLine(g_dis, win, g_gc, 0, 0, w, 0);
+    }
+    if (is_on_right(conf)) {
+        XDrawLine(g_dis, win, g_gc, pos_margin.w, 0, pos_margin.w, h);
+    } else {
+        XDrawLine(g_dis, win, g_gc, w, 0, w, h);
+    }
+    if (is_on_bottom(conf)) {
+        XDrawLine(g_dis, win, g_gc, w, pos_margin.h, 0, pos_margin.h);
+    } else {
+        XDrawLine(g_dis, win, g_gc, w, h, 0, h);
+    }
+    if (is_on_left(conf)) {
+        XDrawLine(g_dis, win, g_gc, pos_margin.x, h, pos_margin.x, 0);
+    } else {
+        XDrawLine(g_dis, win, g_gc, 0, h, 0, 0);
+    }
+}
 
-Window create_win(Window parent, split_type split, float start_percent, float end_percent) {
+Window create_win(Window parent, t_conf *conf, split_type split, float start_percent, float end_percent) {
     Window win;
+
     XSetWindowAttributes xwa = { .background_pixel = (double)rand(), .event_mask = KeyPressMask | ButtonPressMask };
     t_window_pos pos;
 
@@ -60,15 +91,16 @@ Window create_win(Window parent, split_type split, float start_percent, float en
         printf("CANT CREATE WINDOW x %d y %d w %d h %d\n", pos.x, pos.y, pos.w, pos.h);
         return NO_WINDOW;
     }
-    printf("Creating window with parent %lu: x %d y %d w %d h %d\n", parent, pos.x, pos.y, pos.w, pos.h);
 
     win = XCreateWindow(g_dis, parent,
         pos.x, pos.y, pos.w, pos.h, 0,
         DefaultDepth(g_dis, g_screen), InputOutput,
         g_vis, CWEventMask | CWBackPixel , &xwa
     );
+    printf("Creating window %lu with parent %lu: x %d y %d w %d h %d\n", win, parent, pos.x, pos.y, pos.w, pos.h);
     XMapWindow(g_dis, win);
     XFlush(g_dis);
+    draw_margins(conf, win, pos.w, pos.h);
     return win;
 }
 
@@ -88,14 +120,14 @@ t_conf *find_backing_conf(t_conf *conf, Window win) {
 
 bool redraw_windows(t_conf *conf) {
     if (conf->left != NULL) {
-        conf->left->win = create_win(conf->win, conf->split_type, 0.0f, conf->percent);
+        conf->left->win = create_win(conf->win, conf->left, conf->split_type, 0.0f, conf->percent);
         if (conf->left->win == NO_WINDOW) {
             return false;
         }
         redraw_windows(conf->left);
     }
     if (conf->right != NULL) {
-        conf->right->win = create_win(conf->win, conf->split_type, conf->percent, 1.0f);
+        conf->right->win = create_win(conf->win, conf->right, conf->split_type, conf->percent, 1.0f);
         if (conf->right->win == NO_WINDOW) {
             return false;
         }
@@ -146,8 +178,8 @@ void splitWindow(t_conf *conf_root, Window target_win) {
     memset(conf->right, 0, sizeof(t_conf));
     conf->left->parent = conf;
     conf->right->parent = conf;
-    conf->left->window_type = LEFT;
-    conf->right->window_type = RIGHT;
+    conf->left->window_type = conf->split_type == VERTICAL ? LEFT : TOP;
+    conf->right->window_type = conf->split_type == VERTICAL ? RIGHT : BOTTOM;
     if (!redraw_windows(conf)) {
         clean_subwindows(conf, true);
     }
@@ -155,7 +187,6 @@ void splitWindow(t_conf *conf_root, Window target_win) {
 
 void loop() {
     t_conf conf = {
-        .win = create_win(g_win, NONE, 0.0f, 1.0f),
         .resize = NO_WINDOW,
         .split_type = NONE,
         .left = NULL,
@@ -164,6 +195,7 @@ void loop() {
         .parent = NULL,
         .window_type = ALL
     };
+    conf.win = create_win(g_win, &conf, NONE, 0.0f, 1.0f);
 
     XEvent ev;
 
@@ -178,7 +210,7 @@ void loop() {
             case ButtonPress:
                 printf("Clicked Window: %lu\n", ev.xbutton.window);
                 splitWindow(&conf, ev.xbutton.window);
-                print_conf(&conf, 0, "root");
+                print_conf(&conf, 0);
                 break;
         }
     }
