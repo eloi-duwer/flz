@@ -11,7 +11,7 @@ OBJS = $(addprefix $(OBJF), $(SRC_NAME:.c=.o))
 
 CC = gcc
 CFLAGS = -I./include
-LDFLAGS = -lX11 -lXfixes -lXi
+LDFLAGS = -lX11 -lXfixes -lXi -g
 
 all : $(NAME)
 
@@ -20,7 +20,7 @@ $(NAME) : $(OBJS)
 
 $(OBJF)%.o : $(SRCF)%.c
 	@mkdir -p $(@D)
-	$(CC) -o $@ $(CFLAGS) -c $(addprefix $(SRCF), $*.c)
+	$(CC) -o $@ $(CFLAGS) -c $(addprefix $(SRCF), $*.c) -g
 
 clean :
 	rm -rf $(OBJS)

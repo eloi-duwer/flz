@@ -166,7 +166,12 @@ void splitWindow(t_conf *conf_root, Window target_win) {
     }
     if (isShiftPressed) {
             if (conf->parent != NULL) {
+                t_window_pos pos;
+                t_conf *parent = conf->parent;
+                getWindowDimensions(conf->parent->win, &pos);
                 clean_subwindows(conf->parent, true);
+                conf = NULL; // /!\ conf has been freed by clean_subwindows
+                draw_margins(parent, parent->win, pos.w, pos.h);
             }
         return;
     }

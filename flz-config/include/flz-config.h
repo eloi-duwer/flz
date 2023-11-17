@@ -16,7 +16,7 @@
 #define NO_WINDOW (Window)0
 
 #ifdef DEFINE_CONST
-    const double    g_alpha = 0.8;
+    const double    g_alpha = 0.3;
     const int       g_margin = 20;
     const int       g_min_size = 100;
     // Globals
