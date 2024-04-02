@@ -1,3 +1,5 @@
 bin/*
 flz/obj
 flz-config/obj
+zig-cache/
+zig-out/

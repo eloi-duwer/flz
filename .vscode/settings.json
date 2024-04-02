@@ -7,6 +7,9 @@
         "flz.h": "c",
         "stdlib.h": "c",
         "xfixes.h": "c",
-        "xos.h": "c"
+        "xos.h": "c",
+        "xlib.h": "c",
+        "flz-config.h": "c",
+        "stdio.h": "c"
     }
 }

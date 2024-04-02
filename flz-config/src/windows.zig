@@ -1,0 +1,60 @@
+const X11 = @import("x11_import.zig").X11;
+
+const g = @import("globals.zig");
+
+const std = @import("std");
+
+pub fn create_win_global() void {
+    var xwa = std.mem.zeroes(X11.XSetWindowAttributes);
+    xwa.background_pixel = X11.WhitePixel(g.dis, g.screen);
+    xwa.event_mask = X11.KeyPressMask | X11.ButtonPressMask;
+    var vinfo: X11.XVisualInfo = undefined;
+    _ = X11.XMatchVisualInfo(g.dis, g.screen, 32, X11.TrueColor, &vinfo);
+    g.win = X11.XCreateWindow(g.dis, X11.DefaultRootWindow(g.dis), 0, 0, 42, 42, 42, X11.DefaultDepth(g.dis, g.screen), X11.InputOutput, g.vis, X11.CWEventMask | X11.CWBackPixel, &xwa);
+    g.gc = X11.XCreateGC(g.dis, g.win, 0, 0);
+    _ = X11.XSetLineAttributes(g.dis, g.gc, g.margin, X11.LineSolid, X11.CapRound, X11.JoinMiter);
+
+    set_transparent(g.alpha);
+    remove_window_interface();
+
+    _ = X11.XClearWindow(g.dis, g.win);
+    _ = X11.XMapWindow(g.dis, g.win);
+    set_above();
+
+    _ = X11.XMoveResizeWindow(g.dis, g.win, 0, 0, get_curr_display_width(), get_curr_display_height());
+
+    _ = X11.XFlush(g.dis);
+    std.time.sleep(30_000_000);
+    _ = X11.XSetInputFocus(g.dis, g.win, X11.RevertToParent, X11.CurrentTime);
+}
+
+fn set_transparent(alpha: f64) void {
+    const opacity: c_ulong = @intFromFloat(@as(f64, @floatFromInt(0xFFFFFFFF)) * alpha);
+    const atom_opacity = X11.XInternAtom(g.dis, "_NET_WM_WINDOW_OPACITY", X11.False);
+    _ = X11.XChangeProperty(g.dis, g.win, atom_opacity, X11.XA_CARDINAL, 32, X11.PropModeReplace, @ptrCast(&opacity), 1);
+}
+
+fn remove_window_interface() void {
+    const atom_type = X11.XInternAtom(g.dis, "_NET_WM_WINDOW_TYPE", X11.False);
+    const atom_value = X11.XInternAtom(g.dis, "_NET_WM_WINDOW_TYPE_SPLASH", X11.False);
+    _ = X11.XChangeProperty(g.dis, g.win, atom_type, X11.XA_ATOM, 32, X11.PropModeReplace, @ptrCast(&atom_value), 1);
+}
+
+fn set_above() void {
+    const wm_state = X11.XInternAtom(g.dis, "_NET_WM_STATE", X11.False);
+    const wm_state_above = X11.XInternAtom(g.dis, "_NET_WM_STATE_ABOVE", X11.False);
+    _ = X11.XChangeProperty(g.dis, g.win, wm_state, X11.XA_ATOM, 32, X11.PropModeReplace, @ptrCast(&wm_state_above), 1);
+}
+
+fn get_curr_display_width() c_uint {
+    return @intCast(X11.DisplayWidth(g.dis, g.screen));
+}
+
+fn get_curr_display_height() c_uint {
+    return @intCast(X11.DisplayHeight(g.dis, g.screen));
+}
+
+pub fn close_overlay() void {
+    _ = X11.XFreeGC(g.dis, g.gc);
+    _ = X11.XDestroyWindow(g.dis, g.win);
+}
