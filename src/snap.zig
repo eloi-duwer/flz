@@ -1,16 +1,12 @@
-const X11 = @import("x11_import.zig").X11;
+const X11 = @import("x11_import.zig");
 const g = @import("globals.zig");
 const std = @import("std");
-
-const Pos = struct {
-    x: i64,
-    y: i64,
-};
+const s = @import("structs.zig");
 
 pub fn snap_window(win: X11.Window, n_configuring: *u8) void {
-    var pos: Pos = undefined;
-    var xy: Pos = undefined;
-    var wh: Pos = undefined;
+    var pos: s.Pos = undefined;
+    var xy: s.Pos = undefined;
+    var wh: s.Pos = undefined;
     get_cursor_pos(&pos);
     get_workable_area(&xy, &wh);
     const slice_size: i64 = @divTrunc(wh.x, g.zone_count);
@@ -19,7 +15,7 @@ pub fn snap_window(win: X11.Window, n_configuring: *u8) void {
     snap_to_with_parents(n_configuring, win, win_group * slice_size, 0, slice_size, wh.y);
 }
 
-fn get_cursor_pos(ret_pos: *Pos) void {
+fn get_cursor_pos(ret_pos: *s.Pos) void {
     var _root: X11.Window = undefined;
     var _win: X11.Window = undefined;
     var _x: c_int = undefined;
@@ -33,7 +29,7 @@ fn get_cursor_pos(ret_pos: *Pos) void {
     ret_pos.y = y;
 }
 
-fn get_workable_area(xy: *Pos, wh: *Pos) void {
+fn get_workable_area(xy: *s.Pos, wh: *s.Pos) void {
     var n_items: c_ulong = undefined;
     var coords_ret: [*c]u8 = undefined;
 
@@ -61,11 +57,9 @@ fn get_property_value(win: X11.Window, propname: [*]const u8, max_length: c_long
         &actual_type_return, &actual_format_return, n_items_return, &bytes_after_return, prop_return);
 }
 
-const Margins = struct { left: i64, top: i64, right: i64, bottom: i64 };
-
 fn snap_to_with_parents(n_configuring: *u8, win: X11.Window, x: i64, y: i64, width: i64, height: i64) void {
     (n_configuring.*) += 1;
-    var margins: Margins = undefined;
+    var margins: s.Margins = undefined;
     get_window_margin(win, &margins);
     std.debug.print("Snapping {} to {} {} {} {}\n", .{ win, x, y, width, height });
     _ = X11.XMoveResizeWindow(g.dis, win, @intCast(x - margins.right), @intCast(y - margins.top), @intCast(width + margins.right + margins.left), @intCast(height + margins.top + margins.bottom));
@@ -75,7 +69,7 @@ fn snap_to_with_parents(n_configuring: *u8, win: X11.Window, x: i64, y: i64, wid
     }
 }
 
-fn get_window_margin(win: X11.Window, margins: *Margins) void {
+fn get_window_margin(win: X11.Window, margins: *s.Margins) void {
     var n_items: c_ulong = undefined;
     var prop: [*c]u8 = undefined;
     get_property_value(win, "_GTK_FRAME_EXTENTS", 4, &n_items, &prop);

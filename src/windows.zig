@@ -1,4 +1,4 @@
-const X11 = @import("x11_import.zig").X11;
+const X11 = @import("x11_import.zig");
 
 const g = @import("globals.zig");
 

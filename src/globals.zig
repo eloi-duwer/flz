@@ -1,4 +1,4 @@
-const X11 = @import("x11_import.zig").X11;
+const X11 = @import("x11_import.zig");
 
 pub var dis: *X11.Display = undefined;
 pub var screen: c_int = undefined;

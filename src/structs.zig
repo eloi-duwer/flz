@@ -1,4 +1,4 @@
-const X11 = @import("x11_import.zig").X11;
+const X11 = @import("x11_import.zig");
 
 pub const Window_type = enum { ALL, TOP, BOTTOM, LEFT, RIGHT };
 
@@ -27,4 +27,16 @@ pub const Open_state = struct {
     configuring: bool = false,
     opened: bool = false,
     n_configuring: u8 = 0,
+};
+
+pub const Pos = struct {
+    x: i64,
+    y: i64,
+};
+
+pub const Margins = struct {
+    left: i64,
+    top: i64,
+    right: i64,
+    bottom: i64,
 };

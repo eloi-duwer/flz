@@ -1,4 +1,4 @@
-pub const X11 = @cImport({
+pub usingnamespace @cImport({
     @cInclude("X11/Xlib.h");
     @cInclude("X11/extensions/XInput2.h");
     @cInclude("X11/Xlib.h");
