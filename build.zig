@@ -19,7 +19,7 @@ pub fn build(b: *std.Build) void {
         .name = "flz",
         // In this case the main source file is merely a path, however, in more
         // complicated build scripts, this could be a generated file.
-        .root_source_file = .{ .path = "flz/src/main.zig" },
+        .root_source_file = .{ .path = "src/flz.zig" },
         .target = target,
         .optimize = optimize,
     });
@@ -37,7 +37,7 @@ pub fn build(b: *std.Build) void {
     const run_step = b.step("flz", "Run flz");
     run_step.dependOn(&run_cmd.step);
 
-    const flz_config = b.addExecutable(.{ .name = "flz-config", .root_source_file = .{ .path = "flz-config/src/main.zig" }, .target = target, .optimize = optimize });
+    const flz_config = b.addExecutable(.{ .name = "flz-config", .root_source_file = .{ .path = "src/flz-config.zig" }, .target = target, .optimize = optimize });
     flz_config.linkSystemLibrary("X11");
     flz_config.linkSystemLibrary("Xfixes");
     flz_config.linkSystemLibrary("Xi");

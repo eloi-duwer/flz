@@ -21,3 +21,10 @@ pub const Window_pos = struct {
     w: u32,
     h: u32,
 };
+
+pub const Open_state = struct {
+    ctrl_down: bool = false,
+    configuring: bool = false,
+    opened: bool = false,
+    n_configuring: u8 = 0,
+};

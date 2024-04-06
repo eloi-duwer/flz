@@ -1,11 +1,8 @@
 const std = @import("std");
-
 const X11 = @import("x11_import.zig").X11;
-
 const g = @import("globals.zig");
 
 const win = @import("windows.zig");
-
 const s = @import("structs.zig");
 
 pub fn main() !void {

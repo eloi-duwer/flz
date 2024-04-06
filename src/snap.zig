@@ -1,17 +1,5 @@
-const X11 = @cImport({
-    @cInclude("X11/Xlib.h");
-    @cInclude("X11/extensions/XInput2.h");
-    @cInclude("X11/Xlib.h");
-    @cInclude("X11/Xutil.h");
-    @cInclude("X11/Xos.h");
-    @cInclude("X11/Xatom.h");
-    @cInclude("X11/extensions/shape.h");
-    @cInclude("X11/extensions/Xfixes.h");
-    @cInclude("X11/extensions/XInput2.h");
-});
-
+const X11 = @import("x11_import.zig").X11;
 const g = @import("globals.zig");
-
 const std = @import("std");
 
 const Pos = struct {
