@@ -4,7 +4,9 @@ const g = @import("globals.zig");
 
 const std = @import("std");
 
-pub fn create_win_global() void {
+const s = @import("structs.zig");
+
+pub fn create_config_win_global() void {
     var xwa = std.mem.zeroes(X11.XSetWindowAttributes);
     xwa.background_pixel = X11.WhitePixel(g.dis, g.screen);
     xwa.event_mask = X11.KeyPressMask | X11.ButtonPressMask;
@@ -103,4 +105,16 @@ pub fn get_active_window() X11.Window {
 
     _ = X11.XGetInputFocus(g.dis, &focused, &revert);
     return focused;
+}
+
+pub fn get_window_dimensions(window: X11.Window) s.Window_pos {
+    var attrs: X11.XWindowAttributes = undefined;
+    _ = X11.XGetWindowAttributes(g.dis, window, &attrs);
+
+    return s.Window_pos{
+        .x = @intCast(attrs.x),
+        .y = @intCast(attrs.y),
+        .w = @intCast(attrs.width),
+        .h = @intCast(attrs.height),
+    };
 }

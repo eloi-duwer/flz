@@ -4,10 +4,11 @@ const g = @import("globals.zig");
 
 const win = @import("windows.zig");
 const s = @import("structs.zig");
+const print = @import("print.zig");
 
 pub fn main() !void {
     try g.get_defaults();
-    win.create_win_global();
+    win.create_config_win_global();
     try loop();
 }
 
@@ -43,7 +44,7 @@ fn loop() !void {
             X11.ButtonPress => {
                 std.debug.print("Clicked Window: {}\n", .{ev.xbutton.window});
                 try handle_click(&conf, ev.xbutton.window);
-                print_conf(&conf, 0);
+                print.print_conf(&conf, 0);
             },
             else => {
                 // noop
@@ -91,22 +92,12 @@ fn find_backing_conf(_conf: ?*s.Window_conf, window: X11.Window) ?*s.Window_conf
 fn remove_window(_conf: ?*s.Window_conf) void {
     if (_conf) |conf| {
         if (conf.parent) |parent| {
-            var pos: s.Window_pos = undefined;
-            get_window_dimensions(parent.win, &pos);
+            var pos = win.get_window_dimensions(parent.win);
             clean_subwindows(parent, true);
             // /!\ conf has been freed by clean_subwindows, it's an freed reference at this point
             draw_margins(parent, parent.win, pos.w, pos.h);
         }
     }
-}
-
-fn get_window_dimensions(window: X11.Window, pos: *s.Window_pos) void {
-    var attrs: X11.XWindowAttributes = undefined;
-    _ = X11.XGetWindowAttributes(g.dis, window, &attrs);
-    pos.x = @intCast(attrs.x);
-    pos.y = @intCast(attrs.y);
-    pos.w = @intCast(attrs.width);
-    pos.h = @intCast(attrs.height);
 }
 
 fn clean_subwindows(conf: *s.Window_conf, is_root: bool) void {
@@ -170,8 +161,7 @@ fn create_win(parent: X11.Window, conf: *s.Window_conf, split: s.Split_type, sta
     xwa.background_pixel = rand.int(c_ulong);
     xwa.event_mask = X11.KeyPressMask | X11.ButtonPressMask;
 
-    var pos: s.Window_pos = undefined;
-    calc_window_needed_dimensions(parent, split, start_percent, end_percent, &pos);
+    var pos = calc_window_needed_dimensions(parent, split, start_percent, end_percent);
 
     if (pos.w < g.min_size or pos.h < g.min_size) {
         return NO_WINDOW;
@@ -188,20 +178,23 @@ fn create_win(parent: X11.Window, conf: *s.Window_conf, split: s.Split_type, sta
     return window;
 }
 
-fn calc_window_needed_dimensions(parent: X11.Window, split: s.Split_type, start_percent: f64, end_percent: f64, pos: *s.Window_pos) void {
-    var parent_pos: s.Window_pos = undefined;
-    get_window_dimensions(parent, &parent_pos);
+fn calc_window_needed_dimensions(parent: X11.Window, split: s.Split_type, start_percent: f64, end_percent: f64) s.Window_pos {
+    var parent_pos = win.get_window_dimensions(parent);
 
     if (split == .VERTICAL) {
-        pos.x = @intFromFloat(@as(f64, @floatFromInt(parent_pos.w)) * start_percent);
-        pos.y = 0;
-        pos.w = @intFromFloat(@as(f64, @floatFromInt(parent_pos.w)) * (end_percent - start_percent));
-        pos.h = parent_pos.h;
+        return s.Window_pos{
+            .x = @intFromFloat(@as(f64, @floatFromInt(parent_pos.w)) * start_percent),
+            .y = 0,
+            .w = @intFromFloat(@as(f64, @floatFromInt(parent_pos.w)) * (end_percent - start_percent)),
+            .h = parent_pos.h,
+        };
     } else {
-        pos.x = 0;
-        pos.y = @intFromFloat(@as(f64, @floatFromInt(parent_pos.h)) * start_percent);
-        pos.w = parent_pos.w;
-        pos.h = @intFromFloat(@as(f64, @floatFromInt(parent_pos.h)) * (end_percent - start_percent));
+        return s.Window_pos{
+            .x = 0,
+            .y = @intFromFloat(@as(f64, @floatFromInt(parent_pos.h)) * start_percent),
+            .w = parent_pos.w,
+            .h = @intFromFloat(@as(f64, @floatFromInt(parent_pos.h)) * (end_percent - start_percent)),
+        };
     }
 }
 
@@ -271,38 +264,4 @@ fn is_on_right(conf: *s.Window_conf) bool {
     } else {
         return true;
     }
-}
-
-const spaces = blk: {
-    var _spaces: [100]u8 = undefined;
-    for (&_spaces, 0.._spaces.len) |*sp, i| {
-        _ = i;
-        sp.* = ' ';
-    }
-    break :blk _spaces;
-};
-
-fn print_conf(conf: *s.Window_conf, depth: usize) void {
-    _ = .{ depth, conf };
-    const n_spaces = depth * 2;
-    if (n_spaces > spaces.len) {
-        return;
-    }
-    std.debug.print("{s}|-> {s} Window {}\n", .{ spaces[0..n_spaces], print_type(conf.window_type), conf.win });
-    if (conf.left) |left| {
-        print_conf(left, depth + 1);
-    }
-    if (conf.right) |right| {
-        print_conf(right, depth + 1);
-    }
-}
-
-fn print_type(win_type: s.Window_type) *const [6:0]u8 {
-    return switch (win_type) {
-        .ALL => "Root  ",
-        .TOP => "Top   ",
-        .BOTTOM => "Bottom",
-        .LEFT => "Left  ",
-        .RIGHT => "Right ",
-    };
 }

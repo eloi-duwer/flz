@@ -4,18 +4,16 @@ const std = @import("std");
 const s = @import("structs.zig");
 
 pub fn snap_window(win: X11.Window, n_configuring: *u8) void {
-    var pos: s.Pos = undefined;
-    var xy: s.Pos = undefined;
-    var wh: s.Pos = undefined;
-    get_cursor_pos(&pos);
-    get_workable_area(&xy, &wh);
-    const slice_size: i64 = @divTrunc(wh.x, g.zone_count);
+    const pos = get_cursor_pos();
+    const area = get_workable_area();
+
+    const slice_size: i64 = @divTrunc(area.w, g.zone_count);
     const win_group: i64 = @divTrunc(pos.x, slice_size);
 
-    snap_to_with_parents(n_configuring, win, win_group * slice_size, 0, slice_size, wh.y);
+    snap_to_with_parents(n_configuring, win, win_group * slice_size, 0, slice_size, area.h);
 }
 
-fn get_cursor_pos(ret_pos: *s.Pos) void {
+fn get_cursor_pos() s.Pos {
     var _root: X11.Window = undefined;
     var _win: X11.Window = undefined;
     var _x: c_int = undefined;
@@ -25,20 +23,27 @@ fn get_cursor_pos(ret_pos: *s.Pos) void {
     var y: c_int = undefined;
 
     _ = X11.XQueryPointer(g.dis, g.root, &_root, &_win, &x, &y, &_x, &_y, &_mask);
-    ret_pos.x = x;
-    ret_pos.y = y;
+    return s.Pos{
+        .x = x,
+        .y = y,
+    };
 }
 
-fn get_workable_area(xy: *s.Pos, wh: *s.Pos) void {
+fn get_workable_area() s.Window_pos {
     var n_items: c_ulong = undefined;
     var coords_ret: [*c]u8 = undefined;
 
     get_property_value(g.root, "_NET_WORKAREA", 32 * 4, &n_items, &coords_ret);
     const coords: [*]c_ulong = @alignCast(@ptrCast(coords_ret));
-    xy.x = @intCast(coords[0]);
-    xy.y = @intCast(coords[1]);
-    wh.x = @intCast(@as(i64, @intCast(coords[2])) - xy.x);
-    wh.y = @intCast(@as(i64, @intCast(coords[3])) - xy.y);
+    const x: i32 = @intCast(coords[0]);
+    const y: i32 = @intCast(coords[1]);
+
+    return s.Window_pos{
+        .x = x,
+        .y = y,
+        .w = @intCast(@as(i64, @intCast(coords[2])) - x),
+        .h = @intCast(@as(i64, @intCast(coords[3])) - y),
+    };
 }
 
 fn get_property_value(win: X11.Window, propname: [*]const u8, max_length: c_long, n_items_return: *c_ulong, prop_return: [*c][*c]u8) void {
@@ -59,8 +64,7 @@ fn get_property_value(win: X11.Window, propname: [*]const u8, max_length: c_long
 
 fn snap_to_with_parents(n_configuring: *u8, win: X11.Window, x: i64, y: i64, width: i64, height: i64) void {
     (n_configuring.*) += 1;
-    var margins: s.Margins = undefined;
-    get_window_margin(win, &margins);
+    const margins = get_window_margin(win);
     std.debug.print("Snapping {} to {} {} {} {}\n", .{ win, x, y, width, height });
     _ = X11.XMoveResizeWindow(g.dis, win, @intCast(x - margins.right), @intCast(y - margins.top), @intCast(width + margins.right + margins.left), @intCast(height + margins.top + margins.bottom));
     var parent: X11.Window = undefined;
@@ -69,21 +73,25 @@ fn snap_to_with_parents(n_configuring: *u8, win: X11.Window, x: i64, y: i64, wid
     }
 }
 
-fn get_window_margin(win: X11.Window, margins: *s.Margins) void {
+fn get_window_margin(win: X11.Window) s.Margins {
     var n_items: c_ulong = undefined;
     var prop: [*c]u8 = undefined;
     get_property_value(win, "_GTK_FRAME_EXTENTS", 4, &n_items, &prop);
     if (n_items == 0) {
-        margins.left = 0;
-        margins.right = 0;
-        margins.top = 0;
-        margins.bottom = 0;
+        return s.Margins{
+            .left = 0,
+            .right = 0,
+            .top = 0,
+            .bottom = 0,
+        };
     } else {
         const nums: [*]c_ulong = @alignCast(@ptrCast(prop));
-        margins.left = @intCast(nums[0]);
-        margins.right = @intCast(nums[1]);
-        margins.top = @intCast(nums[2]);
-        margins.bottom = @intCast(nums[3]);
+        return s.Margins{
+            .left = @intCast(nums[0]),
+            .right = @intCast(nums[1]),
+            .top = @intCast(nums[2]),
+            .bottom = @intCast(nums[3]),
+        };
     }
 }
 
