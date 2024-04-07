@@ -9,14 +9,14 @@ const s = @import("structs.zig");
 pub fn create_config_win_global() void {
     var xwa = std.mem.zeroes(X11.XSetWindowAttributes);
     xwa.background_pixel = X11.WhitePixel(g.dis, g.screen);
-    xwa.event_mask = X11.KeyPressMask | X11.ButtonPressMask;
+    xwa.event_mask = X11.KeyPressMask | X11.ButtonPressMask | X11.PointerMotionMask | X11.ButtonReleaseMask;
     var vinfo: X11.XVisualInfo = undefined;
     _ = X11.XMatchVisualInfo(g.dis, g.screen, 32, X11.TrueColor, &vinfo);
     g.win = X11.XCreateWindow(g.dis, X11.DefaultRootWindow(g.dis), 0, 0, 42, 42, 42, X11.DefaultDepth(g.dis, g.screen), X11.InputOutput, g.vis, X11.CWEventMask | X11.CWBackPixel, &xwa);
     g.gc = X11.XCreateGC(g.dis, g.win, 0, 0);
     _ = X11.XSetLineAttributes(g.dis, g.gc, g.margin, X11.LineSolid, X11.CapRound, X11.JoinMiter);
 
-    set_transparent(g.alpha);
+    set_transparent(g.alpha, g.win);
     remove_window_interface();
 
     _ = X11.XClearWindow(g.dis, g.win);
@@ -30,10 +30,10 @@ pub fn create_config_win_global() void {
     _ = X11.XSetInputFocus(g.dis, g.win, X11.RevertToParent, X11.CurrentTime);
 }
 
-fn set_transparent(alpha: f64) void {
+pub fn set_transparent(alpha: f64, win: X11.Window) void {
     const opacity: c_ulong = @intFromFloat(@as(f64, @floatFromInt(0xFFFFFFFF)) * alpha);
     const atom_opacity = X11.XInternAtom(g.dis, "_NET_WM_WINDOW_OPACITY", X11.False);
-    _ = X11.XChangeProperty(g.dis, g.win, atom_opacity, X11.XA_CARDINAL, 32, X11.PropModeReplace, @ptrCast(&opacity), 1);
+    _ = X11.XChangeProperty(g.dis, win, atom_opacity, X11.XA_CARDINAL, 32, X11.PropModeReplace, @ptrCast(&opacity), 1);
 }
 
 fn remove_window_interface() void {
@@ -61,18 +61,15 @@ pub fn close_overlay() void {
     _ = X11.XDestroyWindow(g.dis, g.win);
 }
 
-const base_color: [*]const u8 = "#ffffff";
-const base_alpha = 0.2;
-
 pub fn open_overlay() *X11.Display {
     const white = X11.WhitePixel(g.dis, g.screen);
     var v_info: X11.XVisualInfo = undefined;
 
     _ = X11.XMatchVisualInfo(g.dis, g.screen, 32, X11.TrueColor, &v_info);
-    g.win = X11.XCreateSimpleWindow(g.dis, X11.DefaultRootWindow(g.dis), 0, 0, 42, 42, 42, white, get_color(base_color));
+    g.win = X11.XCreateSimpleWindow(g.dis, X11.DefaultRootWindow(g.dis), 0, 0, 42, 42, 42, white, get_color(g.base_color));
     g.gc = X11.XCreateGC(g.dis, g.win, 0, 0);
 
-    set_transparent(base_alpha);
+    set_transparent(g.alpha, g.win);
     remove_window_interface();
     set_dont_intercept_inputs();
 
@@ -116,5 +113,35 @@ pub fn get_window_dimensions(window: X11.Window) s.Window_pos {
         .y = @intCast(attrs.y),
         .w = @intCast(attrs.width),
         .h = @intCast(attrs.height),
+    };
+}
+
+pub fn get_window_position_relative_to_root(window: X11.Window) s.Window_pos {
+    const curr_pos = get_window_dimensions(window);
+    var x: c_int = undefined;
+    var y: c_int = undefined;
+    var child: X11.Window = undefined;
+    _ = X11.XTranslateCoordinates(g.dis, window, g.win, 0, 0, &x, &y, &child);
+    return s.Window_pos{
+        .x = @intCast(x),
+        .y = @intCast(y),
+        .w = curr_pos.w,
+        .h = curr_pos.h,
+    };
+}
+
+pub fn get_cursor_pos(win_relative_to: X11.Window) s.Pos {
+    var _root: X11.Window = undefined;
+    var _win: X11.Window = undefined;
+    var _x: c_int = undefined;
+    var _y: c_int = undefined;
+    var _mask: c_uint = undefined;
+    var x: c_int = undefined;
+    var y: c_int = undefined;
+
+    _ = X11.XQueryPointer(g.dis, win_relative_to, &_root, &_win, &x, &y, &_x, &_y, &_mask);
+    return s.Pos{
+        .x = x,
+        .y = y,
     };
 }

@@ -2,31 +2,16 @@ const X11 = @import("x11_import.zig");
 const g = @import("globals.zig");
 const std = @import("std");
 const s = @import("structs.zig");
+const window = @import("windows.zig");
 
 pub fn snap_window(win: X11.Window, n_configuring: *u8) void {
-    const pos = get_cursor_pos();
+    const pos = window.get_cursor_pos(g.root);
     const area = get_workable_area();
 
     const slice_size: i64 = @divTrunc(area.w, g.zone_count);
     const win_group: i64 = @divTrunc(pos.x, slice_size);
 
     snap_to_with_parents(n_configuring, win, win_group * slice_size, 0, slice_size, area.h);
-}
-
-fn get_cursor_pos() s.Pos {
-    var _root: X11.Window = undefined;
-    var _win: X11.Window = undefined;
-    var _x: c_int = undefined;
-    var _y: c_int = undefined;
-    var _mask: c_uint = undefined;
-    var x: c_int = undefined;
-    var y: c_int = undefined;
-
-    _ = X11.XQueryPointer(g.dis, g.root, &_root, &_win, &x, &y, &_x, &_y, &_mask);
-    return s.Pos{
-        .x = x,
-        .y = y,
-    };
 }
 
 fn get_workable_area() s.Window_pos {

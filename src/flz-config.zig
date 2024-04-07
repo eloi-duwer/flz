@@ -8,6 +8,7 @@ const print = @import("print.zig");
 
 pub fn main() !void {
     try g.get_defaults();
+    g.register_xinput_2();
     win.create_config_win_global();
     try loop();
 }
@@ -32,6 +33,7 @@ fn loop() !void {
     conf.win = create_win(g.win, &conf, .NONE, 0, 1);
 
     var ev: X11.XEvent = undefined;
+    var configuring: ?*s.Window_conf = null;
 
     while (true) {
         _ = X11.XNextEvent(g.dis, &ev);
@@ -43,8 +45,40 @@ fn loop() !void {
             },
             X11.ButtonPress => {
                 std.debug.print("Clicked Window: {}\n", .{ev.xbutton.window});
-                try handle_click(&conf, ev.xbutton.window);
-                print.print_conf(&conf, 0);
+                configuring = try handle_click(&conf, ev.xbutton.window, ev.xbutton.button);
+            },
+            X11.ButtonRelease => {
+                if (configuring != null and ev.xbutton.button == X11.Button1) {
+                    std.debug.print("RELEASE\n", .{});
+                    configuring = null;
+                }
+            },
+            X11.GenericEvent => {
+                var cookie: *X11.XGenericEventCookie = &ev.xcookie;
+                if (X11.XGetEventData(g.dis, cookie) != 0 and cookie.extension == g.xi_opcode) {
+                    if (cookie.evtype == X11.XI_RawMotion) {
+                        if (configuring) |conf_resize| {
+                            const window_pos = win.get_window_position_relative_to_root(conf_resize.win);
+                            const cursor_pos = win.get_cursor_pos(g.win);
+
+                            // print.print_conf(&conf, 0);
+                            std.debug.print("window {} {} cursor {}\n", .{ conf_resize.win, window_pos, cursor_pos });
+                            const cursor_relative_pos = s.Pos{
+                                .x = cursor_pos.x - window_pos.x,
+                                .y = cursor_pos.y - window_pos.y,
+                            };
+                            const percents = .{
+                                std.math.clamp(@as(f64, @floatFromInt(cursor_relative_pos.x)) / @as(f64, @floatFromInt(window_pos.w)), 0.01, 0.99),
+                                std.math.clamp(@as(f64, @floatFromInt(cursor_relative_pos.y)) / @as(f64, @floatFromInt(window_pos.h)), 0.01, 0.99),
+                            };
+                            conf.percent = if (conf.split_type == .VERTICAL) percents[0] else percents[1];
+                            if (!redraw_windows(&conf)) {
+                                clean_subwindows(&conf, true);
+                            }
+                            std.debug.print("{} {}\n", .{ cursor_relative_pos, percents });
+                        }
+                    }
+                }
             },
             else => {
                 // noop
@@ -53,23 +87,31 @@ fn loop() !void {
     }
 }
 
-fn handle_click(conf_root: ?*s.Window_conf, target_win: X11.Window) !void {
+fn handle_click(conf_root: ?*s.Window_conf, target_win: X11.Window, button: c_uint) !?*s.Window_conf {
     var keyboard_state: X11.XkbStateRec = undefined;
     _ = X11.XkbGetState(g.dis, X11.XkbUseCoreKbd, &keyboard_state);
 
     const is_ctrl_pressed = keyboard_state.mods & X11.ControlMask != 0;
     const is_shift_pressed = keyboard_state.mods & X11.ShiftMask != 0;
 
-    const conf = find_backing_conf(conf_root, target_win);
-    if (conf == null) {
-        std.debug.print("Window clicked {} is not in the repertoried list\n", .{target_win});
-        return;
-    }
-    if (is_shift_pressed) {
-        remove_window(conf);
+    const _conf = find_backing_conf(conf_root, target_win);
+    if (_conf) |conf| {
+        const is_resize_clicked = conf.resize == target_win;
+        if (is_resize_clicked) {
+            if (button == X11.Button1) {
+                std.debug.print("Resize !!!\n", .{});
+                return conf;
+            }
+        } else if (is_shift_pressed or button == X11.Button2) {
+            remove_window(conf);
+        } else if (button == X11.Button1 or button == X11.Button3) {
+            try split_window(conf, is_ctrl_pressed or button == X11.Button3);
+        }
     } else {
-        try split_window(conf, is_ctrl_pressed);
+        std.debug.print("Window clicked {} is not in the repertoried list\n", .{target_win});
+        return null;
     }
+    return null;
 }
 
 fn find_backing_conf(_conf: ?*s.Window_conf, window: X11.Window) ?*s.Window_conf {
@@ -78,6 +120,9 @@ fn find_backing_conf(_conf: ?*s.Window_conf, window: X11.Window) ?*s.Window_conf
             return null;
         }
         if (conf.win == window) {
+            return conf;
+        }
+        if (conf.resize == window) {
             return conf;
         }
         const ret = find_backing_conf(conf.left, window);
@@ -110,6 +155,10 @@ fn clean_subwindows(conf: *s.Window_conf, is_root: bool) void {
         clean_subwindows(right, false);
         allocator.destroy(right);
         conf.right = null;
+    }
+    if (conf.resize != NO_WINDOW) {
+        _ = X11.XDestroyWindow(g.dis, conf.resize);
+        conf.resize = NO_WINDOW;
     }
     if (conf.win != NO_WINDOW and !is_root) {
         _ = X11.XDestroyWindow(g.dis, conf.win);
@@ -150,6 +199,9 @@ fn redraw_windows(conf: *s.Window_conf) bool {
         }
         _ = redraw_windows(right);
     }
+    if ((conf.right != null) and (conf.left != null)) {
+        conf.resize = create_resize(conf.win, conf.split_type, conf.percent);
+    }
     return true;
 }
 
@@ -158,8 +210,8 @@ var rand = prng.random();
 
 fn create_win(parent: X11.Window, conf: *s.Window_conf, split: s.Split_type, start_percent: f64, end_percent: f64) X11.Window {
     var xwa = std.mem.zeroes(X11.XSetWindowAttributes);
-    xwa.background_pixel = rand.int(c_ulong);
-    xwa.event_mask = X11.KeyPressMask | X11.ButtonPressMask;
+    xwa.background_pixel = 0xFFFFFFFF;
+    xwa.event_mask = X11.KeyPressMask | X11.ButtonPressMask | X11.ButtonReleaseMask;
 
     var pos = calc_window_needed_dimensions(parent, split, start_percent, end_percent);
 
@@ -264,4 +316,42 @@ fn is_on_right(conf: *s.Window_conf) bool {
     } else {
         return true;
     }
+}
+
+fn create_resize(parent: X11.Window, split_type: s.Split_type, percent: f64) X11.Window {
+    var xwa = std.mem.zeroes(X11.XSetWindowAttributes);
+    xwa.background_pixel = X11.BlackPixel(g.dis, g.screen);
+    xwa.event_mask = X11.KeyPressMask | X11.ButtonPressMask | X11.ButtonReleaseMask;
+
+    const windowPos = win.get_window_dimensions(parent);
+    const pos = if (split_type == .HORIZONTAL) s.Window_pos{
+        .x = @intFromFloat(@as(f64, @floatFromInt(windowPos.w)) * 0.5 - g.resize_half),
+        .y = @intFromFloat(@as(f64, @floatFromInt(windowPos.h)) * percent - g.resize_half),
+        .h = g.resize_size,
+        .w = g.resize_size,
+    } else s.Window_pos{
+        .x = @intFromFloat(@as(f64, @floatFromInt(windowPos.w)) * percent - g.resize_half),
+        .y = @intFromFloat(@as(f64, @floatFromInt(windowPos.h)) * 0.5 - g.resize_half),
+        .h = g.resize_size,
+        .w = g.resize_size,
+    };
+
+    const window = X11.XCreateWindow(
+        g.dis,
+        parent,
+        pos.x,
+        pos.y,
+        pos.w,
+        pos.h,
+        0,
+        X11.DefaultDepth(g.dis, g.screen),
+        X11.InputOutput,
+        g.vis,
+        X11.CWEventMask | X11.CWBackPixel,
+        &xwa,
+    );
+    win.set_transparent(0, window);
+    _ = X11.XMapWindow(g.dis, window);
+    _ = X11.XFlush(g.dis);
+    return window;
 }

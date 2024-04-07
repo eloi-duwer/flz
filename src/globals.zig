@@ -12,6 +12,9 @@ pub const zone_count = 3;
 pub const margin = 20;
 pub const alpha = 0.3;
 pub const min_size = 100;
+pub const resize_size = 50;
+pub const resize_half = resize_size / 2;
+pub const base_color: [*]const u8 = "#ffffff";
 
 pub fn get_defaults() !void {
     dis = X11.XOpenDisplay(null) orelse return error.InitializationError;
