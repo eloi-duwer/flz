@@ -16,7 +16,7 @@ pub fn print_conf(conf: *s.Window_conf, depth: usize) void {
     if (n_spaces > spaces.len) {
         return;
     }
-    std.debug.print("{s}|-> {s} Window {}\n", .{ spaces[0..n_spaces], print_type(conf.window_type), conf.win });
+    std.debug.print("{s}|-> {s} Window {} {} {d:.2} {}\n", .{ spaces[0..n_spaces], print_type(conf.window_type), conf.win, conf.split_type, conf.percent, conf.resize });
     if (conf.left) |left| {
         print_conf(left, depth + 1);
     }

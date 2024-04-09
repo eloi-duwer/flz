@@ -16,7 +16,7 @@ pub fn create_config_win_global() void {
     g.gc = X11.XCreateGC(g.dis, g.win, 0, 0);
     _ = X11.XSetLineAttributes(g.dis, g.gc, g.margin, X11.LineSolid, X11.CapRound, X11.JoinMiter);
 
-    set_transparent(g.alpha, g.win);
+    set_transparent(0.7, g.win);
     remove_window_interface();
 
     _ = X11.XClearWindow(g.dis, g.win);
