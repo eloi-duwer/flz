@@ -9,6 +9,7 @@ const print = @import("print.zig");
 pub fn main() !void {
     try g.get_defaults();
     g.register_xinput_2();
+    g.init_fonts();
     win.create_config_win_global();
     try loop();
 }
@@ -30,7 +31,7 @@ fn loop() !void {
         .window_type = s.Window_type.ALL,
     };
 
-    conf.win = create_win(g.win, &conf, .NONE, 0, 1);
+    conf.win = try create_win(g.win, &conf, .NONE, 0, 1);
 
     var ev: X11.XEvent = undefined;
     var configuring: ?*s.Window_conf = null;
@@ -46,7 +47,6 @@ fn loop() !void {
             X11.ButtonPress => {
                 std.debug.print("Clicked Window: {}\n", .{ev.xbutton.window});
                 configuring = try handle_click(&conf, ev.xbutton.window, ev.xbutton.button);
-                print.print_conf(&conf, 0);
             },
             X11.ButtonRelease => {
                 if (configuring != null and ev.xbutton.button == X11.Button1) {
@@ -78,7 +78,6 @@ fn loop() !void {
                                 conf_resize.percent = old_percent;
                                 _ = update_windows(&conf);
                             }
-                            print.print_conf(&conf, 0);
                         }
                     }
                 }
@@ -111,7 +110,7 @@ fn handle_click(conf_root: ?*s.Window_conf, target_win: X11.Window, button: c_ui
             try split_window(conf, is_ctrl_pressed or button == X11.Button3);
         }
     } else if (conf_root) |conf| {
-        print.print_conf(conf, 0);
+        _ = conf;
         std.debug.print("Window clicked {} is not in the repertoried list\n", .{target_win});
         return null;
     }
@@ -182,26 +181,26 @@ fn split_window(_conf: ?*s.Window_conf, is_ctrl_pressed: bool) !void {
         conf.right.?.parent = conf;
         conf.left.?.window_type = if (conf.split_type == .VERTICAL) .LEFT else .TOP;
         conf.right.?.window_type = if (conf.split_type == .VERTICAL) .RIGHT else .BOTTOM;
-        if (!redraw_windows(conf)) {
+        if (!try redraw_windows(conf)) {
             clean_subwindows(conf, true);
         }
     }
 }
 
-fn redraw_windows(conf: *s.Window_conf) bool {
+fn redraw_windows(conf: *s.Window_conf) !bool {
     if (conf.left) |left| {
-        left.win = create_win(conf.win, left, conf.split_type, 0, conf.percent);
+        left.win = try create_win(conf.win, left, conf.split_type, 0, conf.percent);
         if (left.win == NO_WINDOW) {
             return false;
         }
-        _ = redraw_windows(left);
+        _ = try redraw_windows(left);
     }
     if (conf.right) |right| {
-        right.win = create_win(conf.win, right, conf.split_type, conf.percent, 1);
+        right.win = try create_win(conf.win, right, conf.split_type, conf.percent, 1);
         if (right.win == NO_WINDOW) {
             return false;
         }
-        _ = redraw_windows(right);
+        _ = try redraw_windows(right);
     }
     if ((conf.right != null) and (conf.left != null)) {
         conf.resize = create_resize(conf.win, conf.split_type, conf.percent);
@@ -212,7 +211,7 @@ fn redraw_windows(conf: *s.Window_conf) bool {
 var prng = std.rand.DefaultPrng.init(0);
 var rand = prng.random();
 
-fn create_win(parent: X11.Window, conf: *s.Window_conf, split: s.Split_type, start_percent: f64, end_percent: f64) X11.Window {
+fn create_win(parent: X11.Window, conf: *s.Window_conf, split: s.Split_type, start_percent: f64, end_percent: f64) !X11.Window {
     var xwa = std.mem.zeroes(X11.XSetWindowAttributes);
     xwa.background_pixel = 0xFFFFFFFF;
     xwa.event_mask = X11.KeyPressMask | X11.ButtonPressMask | X11.ButtonReleaseMask;
@@ -231,7 +230,25 @@ fn create_win(parent: X11.Window, conf: *s.Window_conf, split: s.Split_type, sta
     _ = X11.XMapWindow(g.dis, window);
     _ = X11.XFlush(g.dis);
     draw_margins(conf, window, pos.w, pos.h);
+    try draw_window_size(window, pos);
     return window;
+}
+
+fn draw_window_size(window: X11.Window, pos: s.Window_pos) !void {
+    const colormap = X11.DefaultColormap(g.dis, 0);
+    const draw = X11.XftDrawCreate(g.dis, window, g.vis, colormap);
+    const color = X11.XRenderColor{ .alpha = 0xFFFF, .blue = 0x0, .green = 0x0, .red = 0xFFFF };
+    var xft_color: X11.XftColor = undefined;
+    _ = X11.XftColorAllocValue(g.dis, g.vis, colormap, &color, &xft_color);
+
+    var str_buf: [50]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(&str_buf);
+    const str = try std.fmt.allocPrint(fba.allocator(), "{} x {}", .{ pos.w, pos.h });
+
+    _ = X11.XftDrawString8(draw, &xft_color, g.font, g.margin, g.margin + g.font.height, @ptrCast(str), @intCast(str.len));
+    _ = X11.XFlush(g.dis);
+    X11.XftDrawDestroy(draw);
+    X11.XftColorFree(g.dis, g.vis, colormap, &xft_color);
 }
 
 fn update_windows(conf: *s.Window_conf) bool {
@@ -247,7 +264,6 @@ fn update_windows(conf: *s.Window_conf) bool {
     }
     if (conf.resize != NO_WINDOW) {
         const resize_pos = get_resize_pos(conf.win, conf.split_type, conf.percent);
-        std.debug.print("resize move {}", .{resize_pos});
         _ = X11.XMoveResizeWindow(g.dis, conf.resize, resize_pos.x, resize_pos.y, resize_pos.w, resize_pos.h);
     }
     return true;
@@ -265,6 +281,7 @@ fn update_win(parent: X11.Window, conf: *s.Window_conf, split: s.Split_type, sta
 
     _ = X11.XMoveResizeWindow(g.dis, conf.win, pos.x, pos.y, pos.w, pos.h);
     draw_margins(conf, conf.win, pos.w, pos.h);
+    draw_window_size(conf.win, pos) catch unreachable;
     return true;
 }
 
@@ -393,6 +410,9 @@ fn create_resize(parent: X11.Window, split_type: s.Split_type, percent: f64) X11
         X11.CWEventMask | X11.CWBackPixel,
         &xwa,
     );
+
+    const cursor = X11.XCreateFontCursor(g.dis, if (split_type == .VERTICAL) X11.XC_sb_h_double_arrow else X11.XC_sb_v_double_arrow);
+    _ = X11.XDefineCursor(g.dis, window, cursor);
     _ = X11.XMapWindow(g.dis, window);
     _ = X11.XFlush(g.dis);
     return window;

@@ -14,9 +14,10 @@ pub fn create_config_win_global() void {
     _ = X11.XMatchVisualInfo(g.dis, g.screen, 32, X11.TrueColor, &vinfo);
     g.win = X11.XCreateWindow(g.dis, X11.DefaultRootWindow(g.dis), 0, 0, 42, 42, 42, X11.DefaultDepth(g.dis, g.screen), X11.InputOutput, g.vis, X11.CWEventMask | X11.CWBackPixel, &xwa);
     g.gc = X11.XCreateGC(g.dis, g.win, 0, 0);
+
     _ = X11.XSetLineAttributes(g.dis, g.gc, g.margin, X11.LineSolid, X11.CapRound, X11.JoinMiter);
 
-    set_transparent(0.7, g.win);
+    set_transparent(g.alpha_config, g.win);
     remove_window_interface();
 
     _ = X11.XClearWindow(g.dis, g.win);
@@ -69,7 +70,7 @@ pub fn open_overlay() *X11.Display {
     g.win = X11.XCreateSimpleWindow(g.dis, X11.DefaultRootWindow(g.dis), 0, 0, 42, 42, 42, white, get_color(g.base_color));
     g.gc = X11.XCreateGC(g.dis, g.win, 0, 0);
 
-    set_transparent(g.alpha, g.win);
+    set_transparent(g.alpha_overlay, g.win);
     remove_window_interface();
     set_dont_intercept_inputs();
 

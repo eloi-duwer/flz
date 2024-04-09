@@ -7,10 +7,12 @@ pub var xi_opcode: c_int = undefined;
 pub var win: X11.Window = undefined;
 pub var gc: X11.GC = undefined;
 pub var vis: *X11.Visual = undefined;
+pub var font: *X11.XftFont = undefined;
 
 pub const zone_count = 3;
 pub const margin = 20;
-pub const alpha = 0.3;
+pub const alpha_overlay = 0.3;
+pub const alpha_config = 0.7;
 pub const min_size = 100;
 pub const resize_size = 50;
 pub const resize_half = resize_size / 2;
@@ -63,4 +65,8 @@ pub fn register_xinput_2() void {
 pub fn register_window_move() void {
     // Get notified when a window is reconfigured (= moved/resized)
     _ = X11.XSelectInput(dis, root, X11.SubstructureNotifyMask);
+}
+
+pub fn init_fonts() void {
+    font = X11.XftFontOpenName(dis, screen, "Arial-20");
 }
