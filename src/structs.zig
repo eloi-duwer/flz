@@ -15,6 +15,14 @@ pub const Window_conf = struct {
     right: ?*Window_conf,
 };
 
+pub const Save_conf = struct {
+    window_type: Window_type = .ALL,
+    split_type: Split_type = .NONE,
+    percent: f64 = 0.0,
+    left: ?*Save_conf = null,
+    right: ?*Save_conf = null,
+};
+
 pub const Window_pos = struct {
     x: i32,
     y: i32,

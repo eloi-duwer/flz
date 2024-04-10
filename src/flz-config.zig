@@ -5,21 +5,28 @@ const g = @import("globals.zig");
 const win = @import("windows.zig");
 const s = @import("structs.zig");
 const print = @import("print.zig");
+const save = @import("save.zig");
+
+const a = @import("alloc.zig");
 
 pub fn main() !void {
+    var args = std.process.args();
+    _ = args.skip();
+    const save_file = args.next();
+    const begin_conf = try save.load_conf(save_file);
+    _ = begin_conf;
     try g.get_defaults();
     g.register_xinput_2();
     g.init_fonts();
     win.create_config_win_global();
-    try loop();
+    const conf = try loop();
+    _ = .{ conf, save_file };
+    try save.save_conf(save_file, &conf);
 }
 
 const NO_WINDOW = 0;
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-const allocator = gpa.allocator();
-
-fn loop() !void {
+fn loop() !s.Window_conf {
     var conf = s.Window_conf{
         .win = NO_WINDOW,
         .resize = NO_WINDOW,
@@ -41,7 +48,10 @@ fn loop() !void {
         switch (ev.type) {
             X11.KeyPress => {
                 if (X11.XkbKeycodeToKeysym(g.dis, @truncate(ev.xkey.keycode), 0, if (ev.xkey.state & X11.ShiftMask != 0) 1 else 0) == X11.XK_Escape) {
-                    return win.close_overlay();
+                    win.close_overlay();
+                    std.debug.print("{}\n", .{conf});
+
+                    return conf;
                 }
             },
             X11.ButtonPress => {
@@ -151,12 +161,12 @@ fn remove_window(_conf: ?*s.Window_conf) void {
 fn clean_subwindows(conf: *s.Window_conf, is_root: bool) void {
     if (conf.left) |left| {
         clean_subwindows(left, false);
-        allocator.destroy(left);
+        a.allocator.destroy(left);
         conf.left = null;
     }
     if (conf.right) |right| {
         clean_subwindows(right, false);
-        allocator.destroy(right);
+        a.allocator.destroy(right);
         conf.right = null;
     }
     if (conf.resize != NO_WINDOW) {
@@ -173,8 +183,8 @@ fn split_window(_conf: ?*s.Window_conf, is_ctrl_pressed: bool) !void {
     if (_conf) |conf| {
         conf.split_type = if (is_ctrl_pressed) .HORIZONTAL else .VERTICAL;
         conf.percent = 0.5;
-        conf.left = try allocator.create(s.Window_conf);
-        conf.right = try allocator.create(s.Window_conf);
+        conf.left = try a.allocator.create(s.Window_conf);
+        conf.right = try a.allocator.create(s.Window_conf);
         conf.left.?.* = std.mem.zeroes(s.Window_conf);
         conf.right.?.* = std.mem.zeroes(s.Window_conf);
         conf.left.?.parent = conf;
@@ -241,11 +251,11 @@ fn draw_window_size(window: X11.Window, pos: s.Window_pos) !void {
     var xft_color: X11.XftColor = undefined;
     _ = X11.XftColorAllocValue(g.dis, g.vis, colormap, &color, &xft_color);
 
-    var str_buf: [50]u8 = undefined;
-    var fba = std.heap.FixedBufferAllocator.init(&str_buf);
-    const str = try std.fmt.allocPrint(fba.allocator(), "{} x {}", .{ pos.w, pos.h });
+    const str = try std.fmt.allocPrint(a.allocator, "{} x {}", .{ pos.w, pos.h });
+    defer a.allocator.free(str);
 
     _ = X11.XftDrawString8(draw, &xft_color, g.font, g.margin, g.margin + g.font.height, @ptrCast(str), @intCast(str.len));
+
     _ = X11.XFlush(g.dis);
     X11.XftDrawDestroy(draw);
     X11.XftColorFree(g.dis, g.vis, colormap, &xft_color);
