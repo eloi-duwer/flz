@@ -1,0 +1,79 @@
+{
+  "window_type": "ALL",
+  "split_type": "VERTICAL",
+  "percent": 6.659722222222222e-01,
+  "left": {
+    "window_type": "LEFT",
+    "split_type": "VERTICAL",
+    "percent": 4.994786235662148e-01,
+    "left": {
+      "window_type": "LEFT",
+      "split_type": "VERTICAL",
+      "percent": 5.0e-01,
+      "left": {
+        "window_type": "LEFT",
+        "split_type": "HORIZONTAL",
+        "percent": 5.0e-01,
+        "left": {
+          "window_type": "TOP",
+          "split_type": "NONE",
+          "percent": 0.0e+00,
+          "left": null,
+          "right": null
+        },
+        "right": {
+          "window_type": "BOTTOM",
+          "split_type": "NONE",
+          "percent": 0.0e+00,
+          "left": null,
+          "right": null
+        }
+      },
+      "right": {
+        "window_type": "RIGHT",
+        "split_type": "HORIZONTAL",
+        "percent": 5.0e-01,
+        "left": null,
+        "right": null
+      }
+    },
+    "right": {
+      "window_type": "RIGHT",
+      "split_type": "NONE",
+      "percent": 0.0e+00,
+      "left": null,
+      "right": null
+    }
+  },
+  "right": {
+    "window_type": "RIGHT",
+    "split_type": "VERTICAL",
+    "percent": 4.968814968814969e-01,
+    "left": {
+      "window_type": "LEFT",
+      "split_type": "NONE",
+      "percent": 0.0e+00,
+      "left": null,
+      "right": null
+    },
+    "right": {
+      "window_type": "RIGHT",
+      "split_type": "HORIZONTAL",
+      "percent": 5.0e-01,
+      "left": {
+        "window_type": "TOP",
+        "split_type": "NONE",
+        "percent": 0.0e+00,
+        "left": null,
+        "right": null
+      },
+      "right": {
+        "window_type": "BOTTOM",
+        "split_type": "NONE",
+        "percent": 0.0e+00,
+        "left": null,
+        "right": null
+      }
+    }
+  }
+}

@@ -12,33 +12,21 @@ const a = @import("alloc.zig");
 pub fn main() !void {
     var args = std.process.args();
     _ = args.skip();
-    const save_file = args.next();
-    const begin_conf = try save.load_conf(save_file);
-    _ = begin_conf;
     try g.get_defaults();
+    const save_file = args.next();
+    var conf = try save.load_conf(save_file);
     g.register_xinput_2();
     g.init_fonts();
     win.create_config_win_global();
-    const conf = try loop();
-    _ = .{ conf, save_file };
-    try save.save_conf(save_file, &conf);
+    try loop(conf);
+    try save.save_conf(save_file, conf);
 }
 
-const NO_WINDOW = 0;
-
-fn loop() !s.Window_conf {
-    var conf = s.Window_conf{
-        .win = NO_WINDOW,
-        .resize = NO_WINDOW,
-        .split_type = s.Split_type.NONE,
-        .left = null,
-        .right = null,
-        .percent = 0,
-        .parent = null,
-        .window_type = s.Window_type.ALL,
-    };
-
-    conf.win = try create_win(g.win, &conf, .NONE, 0, 1);
+fn loop(conf: *s.Window_conf) !void {
+    conf.win = try create_win(g.win, conf, .NONE, 0, 1);
+    if (!try redraw_windows(conf)) {
+        return error.CantDrowConfHere;
+    }
 
     var ev: X11.XEvent = undefined;
     var configuring: ?*s.Window_conf = null;
@@ -50,17 +38,14 @@ fn loop() !s.Window_conf {
                 if (X11.XkbKeycodeToKeysym(g.dis, @truncate(ev.xkey.keycode), 0, if (ev.xkey.state & X11.ShiftMask != 0) 1 else 0) == X11.XK_Escape) {
                     win.close_overlay();
                     std.debug.print("{}\n", .{conf});
-
-                    return conf;
+                    return;
                 }
             },
             X11.ButtonPress => {
-                std.debug.print("Clicked Window: {}\n", .{ev.xbutton.window});
-                configuring = try handle_click(&conf, ev.xbutton.window, ev.xbutton.button);
+                configuring = try handle_click(conf, ev.xbutton.window, ev.xbutton.button);
             },
             X11.ButtonRelease => {
                 if (configuring != null and ev.xbutton.button == X11.Button1) {
-                    std.debug.print("RELEASE\n", .{});
                     configuring = null;
                 }
             },
@@ -72,7 +57,6 @@ fn loop() !s.Window_conf {
                             const window_pos = win.get_window_position_relative_to_root(conf_resize.win);
                             const cursor_pos = win.get_cursor_pos(g.win);
 
-                            std.debug.print("window {} {} cursor {}\n", .{ conf_resize.win, window_pos, cursor_pos });
                             const cursor_relative_pos = s.Pos{
                                 .x = cursor_pos.x - window_pos.x,
                                 .y = cursor_pos.y - window_pos.y,
@@ -83,10 +67,9 @@ fn loop() !s.Window_conf {
                             };
                             const old_percent = conf_resize.percent;
                             conf_resize.percent = if (conf_resize.split_type == .VERTICAL) percents[0] else percents[1];
-                            std.debug.print("relative pos {} old percent {d:.2} new percent {d:.2}\n", .{ cursor_relative_pos, old_percent, conf.percent });
-                            if (!update_windows(&conf)) {
+                            if (!update_windows(conf)) {
                                 conf_resize.percent = old_percent;
-                                _ = update_windows(&conf);
+                                _ = update_windows(conf);
                             }
                         }
                     }
@@ -129,7 +112,7 @@ fn handle_click(conf_root: ?*s.Window_conf, target_win: X11.Window, button: c_ui
 
 fn find_backing_conf(_conf: ?*s.Window_conf, window: X11.Window) ?*s.Window_conf {
     if (_conf) |conf| {
-        if (conf.win == NO_WINDOW) {
+        if (conf.win == g.NO_WINDOW) {
             return null;
         }
         if (conf.win == window) {
@@ -169,13 +152,13 @@ fn clean_subwindows(conf: *s.Window_conf, is_root: bool) void {
         a.allocator.destroy(right);
         conf.right = null;
     }
-    if (conf.resize != NO_WINDOW) {
+    if (conf.resize != g.NO_WINDOW) {
         _ = X11.XDestroyWindow(g.dis, conf.resize);
-        conf.resize = NO_WINDOW;
+        conf.resize = g.NO_WINDOW;
     }
-    if (conf.win != NO_WINDOW and !is_root) {
+    if (conf.win != g.NO_WINDOW and !is_root) {
         _ = X11.XDestroyWindow(g.dis, conf.win);
-        conf.win = NO_WINDOW;
+        conf.win = g.NO_WINDOW;
     }
 }
 
@@ -200,14 +183,14 @@ fn split_window(_conf: ?*s.Window_conf, is_ctrl_pressed: bool) !void {
 fn redraw_windows(conf: *s.Window_conf) !bool {
     if (conf.left) |left| {
         left.win = try create_win(conf.win, left, conf.split_type, 0, conf.percent);
-        if (left.win == NO_WINDOW) {
+        if (left.win == g.NO_WINDOW) {
             return false;
         }
         _ = try redraw_windows(left);
     }
     if (conf.right) |right| {
         right.win = try create_win(conf.win, right, conf.split_type, conf.percent, 1);
-        if (right.win == NO_WINDOW) {
+        if (right.win == g.NO_WINDOW) {
             return false;
         }
         _ = try redraw_windows(right);
@@ -229,7 +212,7 @@ fn create_win(parent: X11.Window, conf: *s.Window_conf, split: s.Split_type, sta
     const pos = calc_window_needed_dimensions(parent, split, start_percent, end_percent);
 
     if (pos.w < g.min_size or pos.h < g.min_size) {
-        return NO_WINDOW;
+        return g.NO_WINDOW;
     }
 
     const window = X11.XCreateWindow(g.dis, parent, pos.x, pos.y, pos.w, pos.h, 0, X11.DefaultDepth(g.dis, g.screen), X11.InputOutput, g.vis, X11.CWEventMask | X11.CWBackPixel, &xwa);
@@ -272,7 +255,7 @@ fn update_windows(conf: *s.Window_conf) bool {
             return false;
         }
     }
-    if (conf.resize != NO_WINDOW) {
+    if (conf.resize != g.NO_WINDOW) {
         const resize_pos = get_resize_pos(conf.win, conf.split_type, conf.percent);
         _ = X11.XMoveResizeWindow(g.dis, conf.resize, resize_pos.x, resize_pos.y, resize_pos.w, resize_pos.h);
     }
@@ -280,7 +263,7 @@ fn update_windows(conf: *s.Window_conf) bool {
 }
 
 fn update_win(parent: X11.Window, conf: *s.Window_conf, split: s.Split_type, start_percent: f64, end_percent: f64) bool {
-    if (conf.win == NO_WINDOW) {
+    if (conf.win == g.NO_WINDOW) {
         return true;
     }
     const pos = calc_window_needed_dimensions(parent, split, start_percent, end_percent);

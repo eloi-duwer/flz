@@ -7,25 +7,32 @@ pub fn save_conf(_save_file: ?[:0]const u8, conf: *const s.Window_conf) !void {
     if (_save_file) |save_file| {
         const save = try conf_to_save(conf);
 
-        std.debug.print("{}\n", .{save});
-
-        var file = try std.fs.cwd().openFile(save_file, .{ .mode = .write_only });
+        var file = try std.fs.cwd().createFile(save_file, .{ .truncate = true });
         defer file.close();
 
-        try file.setEndPos(0);
         try std.json.stringify(save, .{ .whitespace = .indent_2 }, file.writer());
     }
 }
 
-pub fn load_conf(_save_file: ?[:0]const u8) !?*const s.Window_conf {
+pub fn load_conf(_save_file: ?[:0]const u8) !*s.Window_conf {
     if (_save_file) |save_file| {
-        const file = try std.fs.cwd().openFile(save_file, .{});
-        defer file.close();
-        const save_str = try file.readToEndAlloc(a.allocator, 999999);
+        const save_str = std.fs.cwd().readFileAlloc(a.allocator, save_file, 999999) catch |e| {
+            switch (e) {
+                error.FileNotFound => {
+                    return default_conf();
+                },
+                else => return e,
+            }
+        };
         const parsed_conf = try std.json.parseFromSlice(s.Save_conf, a.allocator, save_str, .{});
         return save_to_conf(&parsed_conf.value, null);
     }
-    return null;
+    return default_conf();
+}
+
+fn default_conf() !*s.Window_conf {
+    const default_save_conf = s.Save_conf{};
+    return save_to_conf(&default_save_conf, null);
 }
 
 fn conf_to_save(conf: *const s.Window_conf) !*s.Save_conf {
