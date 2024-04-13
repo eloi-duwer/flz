@@ -8,13 +8,14 @@ const print = @import("print.zig");
 const save = @import("save.zig");
 
 const a = @import("alloc.zig");
+const calc_percent = @import("calc.zig").calc_percent;
 
 pub fn main() !void {
     var args = std.process.args();
     _ = args.skip();
     try g.get_defaults();
     const save_file = args.next();
-    var conf = try save.load_conf(save_file);
+    var conf = try save.load_conf(s.Window_conf, save_file);
     g.register_xinput_2();
     g.init_fonts();
     win.create_config_win_global();
@@ -283,17 +284,17 @@ fn calc_window_needed_dimensions(parent: X11.Window, split: s.Split_type, start_
 
     if (split == .VERTICAL) {
         return s.Window_pos{
-            .x = @intFromFloat(@as(f64, @floatFromInt(parent_pos.w)) * start_percent),
+            .x = calc_percent(i32, parent_pos.w, start_percent),
             .y = 0,
-            .w = @intFromFloat(@as(f64, @floatFromInt(parent_pos.w)) * (end_percent - start_percent)),
+            .w = calc_percent(u32, parent_pos.w, end_percent - start_percent),
             .h = parent_pos.h,
         };
     } else {
         return s.Window_pos{
             .x = 0,
-            .y = @intFromFloat(@as(f64, @floatFromInt(parent_pos.h)) * start_percent),
+            .y = calc_percent(i32, parent_pos.h, start_percent),
             .w = parent_pos.w,
-            .h = @intFromFloat(@as(f64, @floatFromInt(parent_pos.h)) * (end_percent - start_percent)),
+            .h = calc_percent(u32, parent_pos.h, end_percent - start_percent),
         };
     }
 }
@@ -370,13 +371,13 @@ fn get_resize_pos(window: X11.Window, split_type: s.Split_type, percent: f64) s.
     const window_pos = win.get_window_dimensions(window);
 
     return if (split_type == .HORIZONTAL) s.Window_pos{
-        .x = @intFromFloat(@as(f64, @floatFromInt(window_pos.w)) * 0.5 - g.resize_half),
-        .y = @intFromFloat(@as(f64, @floatFromInt(window_pos.h)) * percent - g.resize_half),
+        .x = @intFromFloat(calc_percent(f64, window_pos.w, 0.5) - g.resize_half),
+        .y = @intFromFloat(calc_percent(f64, window_pos.h, percent) - g.resize_half),
         .h = g.resize_size,
         .w = g.resize_size,
     } else s.Window_pos{
-        .x = @intFromFloat(@as(f64, @floatFromInt(window_pos.w)) * percent - g.resize_half),
-        .y = @intFromFloat(@as(f64, @floatFromInt(window_pos.h)) * 0.5 - g.resize_half),
+        .x = @intFromFloat(calc_percent(f64, window_pos.w, percent) - g.resize_half),
+        .y = @intFromFloat(calc_percent(f64, window_pos.h, 0.5) - g.resize_half),
         .h = g.resize_size,
         .w = g.resize_size,
     };
