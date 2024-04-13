@@ -1,11 +1,11 @@
 {
   "window_type": "ALL",
   "split_type": "VERTICAL",
-  "percent": 5.0e-01,
+  "percent": 6.970703125e-01,
   "left": {
     "window_type": "LEFT",
     "split_type": "VERTICAL",
-    "percent": 5.0e-01,
+    "percent": 2.6001681143177363e-01,
     "left": {
       "window_type": "LEFT",
       "split_type": "NONE",
@@ -17,30 +17,25 @@
       "window_type": "RIGHT",
       "split_type": "VERTICAL",
       "percent": 5.0e-01,
-      "left": {
-        "window_type": "LEFT",
-        "split_type": "NONE",
-        "percent": 0.0e+00,
-        "left": null,
-        "right": null
-      },
-      "right": {
-        "window_type": "RIGHT",
-        "split_type": "NONE",
-        "percent": 0.0e+00,
-        "left": null,
-        "right": null
-      }
+      "left": null,
+      "right": null
     }
   },
   "right": {
     "window_type": "RIGHT",
     "split_type": "VERTICAL",
-    "percent": 5.0e-01,
+    "percent": 5.170857511283043e-01,
     "left": {
       "window_type": "LEFT",
       "split_type": "HORIZONTAL",
       "percent": 5.0e-01,
+      "left": null,
+      "right": null
+    },
+    "right": {
+      "window_type": "RIGHT",
+      "split_type": "HORIZONTAL",
+      "percent": 7.030346820809249e-01,
       "left": {
         "window_type": "TOP",
         "split_type": "NONE",
@@ -55,13 +50,6 @@
         "left": null,
         "right": null
       }
-    },
-    "right": {
-      "window_type": "RIGHT",
-      "split_type": "NONE",
-      "percent": 0.0e+00,
-      "left": null,
-      "right": null
     }
   }
 }
