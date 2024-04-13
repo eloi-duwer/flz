@@ -49,11 +49,11 @@ fn set_above() void {
     _ = X11.XChangeProperty(g.dis, g.win, wm_state, X11.XA_ATOM, 32, X11.PropModeReplace, @ptrCast(&wm_state_above), 1);
 }
 
-fn get_curr_display_width() c_uint {
+pub fn get_curr_display_width() c_uint {
     return @intCast(X11.DisplayWidth(g.dis, g.screen));
 }
 
-fn get_curr_display_height() c_uint {
+pub fn get_curr_display_height() c_uint {
     return @intCast(X11.DisplayHeight(g.dis, g.screen));
 }
 
@@ -62,7 +62,8 @@ pub fn close_overlay() void {
     _ = X11.XDestroyWindow(g.dis, g.win);
 }
 
-pub fn open_overlay() *X11.Display {
+pub fn open_overlay(conf: *s.Snap_conf) *X11.Display {
+    _ = conf;
     const white = X11.WhitePixel(g.dis, g.screen);
     var v_info: X11.XVisualInfo = undefined;
 

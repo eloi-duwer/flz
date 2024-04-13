@@ -15,6 +15,17 @@ pub const Window_conf = struct {
     right: ?*Window_conf,
 };
 
+pub const Snap_conf = struct {
+    split_type: Split_type,
+    window_type: Window_type,
+    percent: f64,
+    parent: ?*Snap_conf,
+    left: ?*Snap_conf,
+    right: ?*Snap_conf,
+    pos: Window_pos,
+    highlighted: bool,
+};
+
 pub const Save_conf = struct {
     window_type: Window_type = .ALL,
     split_type: Split_type = .NONE,

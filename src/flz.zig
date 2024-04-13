@@ -5,15 +5,22 @@ const g = @import("globals.zig");
 const win = @import("windows.zig");
 const s = @import("structs.zig");
 const snap = @import("snap.zig");
+const save = @import("save.zig");
 
 pub fn main() !void {
     try g.get_defaults();
     g.register_xinput_2();
     g.register_window_move();
-    loop();
+
+    var args = std.process.args();
+    _ = args.skip();
+    const save_file = args.next();
+    const conf = try save.load_conf(s.Snap_conf, save_file);
+
+    loop(conf);
 }
 
-fn loop() noreturn {
+fn loop(conf: *s.Snap_conf) noreturn {
     var ev: X11.XEvent = undefined;
     var cookie: *X11.XGenericEventCookie = &ev.xcookie;
     var state = s.Open_state{};
@@ -33,7 +40,7 @@ fn loop() noreturn {
                     if (cookie.evtype == X11.XI_RawKeyPress and ctrl_pressed) {
                         // open_snap
                         state.ctrl_down = true;
-                        handle_open_snap(&state);
+                        handle_open_snap(conf, &state);
                     }
                     if (cookie.evtype == X11.XI_RawKeyRelease and ctrl_pressed) {
                         handle_ctrl_up(&state);
@@ -55,7 +62,7 @@ fn loop() noreturn {
                 state.n_configuring -= 1;
             } else {
                 state.configuring = true;
-                handle_open_snap(&state);
+                handle_open_snap(conf, &state);
             }
         }
         X11.XFreeEventData(g.dis, cookie);
@@ -63,11 +70,11 @@ fn loop() noreturn {
 }
 
 // Open the overlay only if we're not already & if we're configuring while ctrl is down
-fn handle_open_snap(state: *s.Open_state) void {
+fn handle_open_snap(conf: *s.Snap_conf, state: *s.Open_state) void {
     if (!state.opened and state.configuring and state.ctrl_down) {
         state.opened = true;
         std.debug.print("Open\n", .{});
-        _ = win.open_overlay();
+        _ = win.open_overlay(conf);
     }
 }
 

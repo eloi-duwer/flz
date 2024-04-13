@@ -2,6 +2,7 @@ const s = @import("structs.zig");
 const std = @import("std");
 
 const a = @import("alloc.zig");
+const win = @import("windows.zig");
 
 pub fn save_conf(_save_file: ?[:0]const u8, conf: *const s.Window_conf) !void {
     if (_save_file) |save_file| {
@@ -14,25 +15,25 @@ pub fn save_conf(_save_file: ?[:0]const u8, conf: *const s.Window_conf) !void {
     }
 }
 
-pub fn load_conf(_save_file: ?[:0]const u8) !*s.Window_conf {
+pub fn load_conf(comptime Save_type: type, _save_file: ?[:0]const u8) !*Save_type {
     if (_save_file) |save_file| {
         const save_str = std.fs.cwd().readFileAlloc(a.allocator, save_file, 999999) catch |e| {
             switch (e) {
                 error.FileNotFound => {
-                    return default_conf();
+                    return default_conf(Save_type);
                 },
                 else => return e,
             }
         };
         const parsed_conf = try std.json.parseFromSlice(s.Save_conf, a.allocator, save_str, .{});
-        return save_to_conf(&parsed_conf.value, null);
+        return save_to_conf(Save_type, &parsed_conf.value, null);
     }
-    return default_conf();
+    return default_conf(Save_type);
 }
 
-fn default_conf() !*s.Window_conf {
+fn default_conf(comptime Save_type: type) !*Save_type {
     const default_save_conf = s.Save_conf{};
-    return save_to_conf(&default_save_conf, null);
+    return save_to_conf(Save_type, &default_save_conf, null);
 }
 
 fn conf_to_save(conf: *const s.Window_conf) !*s.Save_conf {
@@ -49,18 +50,44 @@ fn conf_to_save(conf: *const s.Window_conf) !*s.Save_conf {
     return save;
 }
 
-pub fn save_to_conf(save: *const s.Save_conf, parent: ?*s.Window_conf) !*s.Window_conf {
-    var conf = try a.allocator.create(s.Window_conf);
+pub fn save_to_conf(comptime Save_type: type, save: *const s.Save_conf, parent: ?*Save_type) !*Save_type {
+    var conf = try a.allocator.create(Save_type);
+    if (parent == null and save.window_type != .ALL) {
+        return error.RootWindowMustHaveWindowTypeAll;
+    } else if (parent != null and save.window_type == .ALL) {
+        return error.ChildWindowMusthNotHaveWindowTypeAll;
+    }
 
-    conf.* = s.Window_conf{
-        .left = if (save.left) |_left| try save_to_conf(_left, conf) else null,
-        .right = if (save.right) |_right| try save_to_conf(_right, conf) else null,
-        .percent = save.percent,
-        .split_type = save.split_type,
-        .window_type = save.window_type,
-        .parent = parent,
-        .win = 0,
-        .resize = 0,
-    };
+    switch (Save_type) {
+        s.Window_conf => {
+            conf.* = s.Window_conf{
+                .left = if (save.left) |_left| try save_to_conf(Save_type, _left, conf) else null,
+                .right = if (save.right) |_right| try save_to_conf(Save_type, _right, conf) else null,
+                .percent = save.percent,
+                .split_type = save.split_type,
+                .window_type = save.window_type,
+                .parent = parent,
+                .win = 0,
+                .resize = 0,
+            };
+        },
+        s.Snap_conf => {
+            conf.* = s.Snap_conf{
+                .left = if (save.left) |_left| try save_to_conf(Save_type, _left, conf) else null,
+                .right = if (save.right) |_right| try save_to_conf(Save_type, _right, conf) else null,
+                .percent = save.percent,
+                .split_type = save.split_type,
+                .window_type = save.window_type,
+                .parent = parent,
+                .pos = switch (save.window_type) {
+                    .ALL => s.Window_pos{ .x = 0, .y = 0, .w = win.get_curr_display_width(), .h = win.get_curr_display_height() },
+                    .TOP => s.Window_pos{ .x = parent.?.pos.x, .y = parent.?.pos.y, .w = parent.?.pos.w, .h = parent.?.pos.h * parent.?.percent },
+                    else => s.Window_pos{ .x = 0, .y = 0, .w = win.get_curr_display_width(), .h = win.get_curr_display_height() },
+                },
+                .highlighted = false,
+            };
+        },
+        else => @compileError("Can't parse type from save"),
+    }
     return conf;
 }
