@@ -3,6 +3,7 @@ const std = @import("std");
 
 const a = @import("alloc.zig");
 const win = @import("windows.zig");
+const c = @import("calc.zig");
 
 pub fn save_conf(_save_file: ?[:0]const u8, conf: *const s.Window_conf) !void {
     if (_save_file) |save_file| {
@@ -81,8 +82,11 @@ pub fn save_to_conf(comptime Save_type: type, save: *const s.Save_conf, parent: 
                 .parent = parent,
                 .pos = switch (save.window_type) {
                     .ALL => s.Window_pos{ .x = 0, .y = 0, .w = win.get_curr_display_width(), .h = win.get_curr_display_height() },
-                    .TOP => s.Window_pos{ .x = parent.?.pos.x, .y = parent.?.pos.y, .w = parent.?.pos.w, .h = parent.?.pos.h * parent.?.percent },
-                    else => s.Window_pos{ .x = 0, .y = 0, .w = win.get_curr_display_width(), .h = win.get_curr_display_height() },
+                    // as checked earlier: all non .ALL windows have non null parent
+                    .TOP => s.Window_pos{ .x = parent.?.pos.x, .y = parent.?.pos.y, .w = parent.?.pos.w, .h = c.calc_percent(u32, parent.?.pos.h, parent.?.percent) },
+                    .BOTTOM => s.Window_pos{ .x = parent.?.pos.x + c.calc_percent(i32, parent.?.pos.h, parent.?.percent), .y = parent.?.pos.y, .w = parent.?.pos.w, .h = c.calc_percent(u32, parent.?.pos.h, 1 - parent.?.percent) },
+                    .LEFT => s.Window_pos{ .x = parent.?.pos.x, .y = parent.?.pos.y, .w = c.calc_percent(u32, parent.?.pos.w, parent.?.percent), .h = parent.?.pos.h },
+                    .RIGHT => s.Window_pos{ .x = parent.?.pos.x + c.calc_percent(i32, parent.?.pos.w, parent.?.percent), .y = parent.?.pos.y, .w = c.calc_percent(u32, parent.?.pos.w, 1 - parent.?.percent), .h = parent.?.pos.h },
                 },
                 .highlighted = false,
             };
