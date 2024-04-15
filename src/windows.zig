@@ -13,9 +13,8 @@ pub fn create_config_win_global() void {
     var vinfo: X11.XVisualInfo = undefined;
     _ = X11.XMatchVisualInfo(g.dis, g.screen, 32, X11.TrueColor, &vinfo);
     g.win = X11.XCreateWindow(g.dis, X11.DefaultRootWindow(g.dis), 0, 0, 42, 42, 42, X11.DefaultDepth(g.dis, g.screen), X11.InputOutput, g.vis, X11.CWEventMask | X11.CWBackPixel, &xwa);
-    g.gc = X11.XCreateGC(g.dis, g.win, 0, 0);
 
-    _ = X11.XSetLineAttributes(g.dis, g.gc, g.margin, X11.LineSolid, X11.CapRound, X11.JoinMiter);
+    create_gc_margins();
 
     set_transparent(g.alpha_config, g.win);
     remove_window_interface();
@@ -29,6 +28,12 @@ pub fn create_config_win_global() void {
     _ = X11.XFlush(g.dis);
     std.time.sleep(30_000_000);
     _ = X11.XSetInputFocus(g.dis, g.win, X11.RevertToParent, X11.CurrentTime);
+}
+
+pub fn create_gc_margins() void {
+    g.gc = X11.XCreateGC(g.dis, g.win, 0, 0);
+
+    _ = X11.XSetLineAttributes(g.dis, g.gc, g.margin, X11.LineSolid, X11.CapRound, X11.JoinMiter);
 }
 
 pub fn set_transparent(alpha: f64, win: X11.Window) void {
@@ -63,15 +68,15 @@ pub fn close_overlay() void {
 }
 
 pub fn open_overlay(conf: *s.Snap_conf) *X11.Display {
-    _ = conf;
     const white = X11.WhitePixel(g.dis, g.screen);
     var v_info: X11.XVisualInfo = undefined;
 
     _ = X11.XMatchVisualInfo(g.dis, g.screen, 32, X11.TrueColor, &v_info);
     g.win = X11.XCreateSimpleWindow(g.dis, X11.DefaultRootWindow(g.dis), 0, 0, 42, 42, 42, white, get_color(g.base_color));
-    g.gc = X11.XCreateGC(g.dis, g.win, 0, 0);
 
-    set_transparent(g.alpha_overlay, g.win);
+    create_gc_margins();
+
+    set_transparent(g.alpha_config, g.win);
     remove_window_interface();
     set_dont_intercept_inputs();
 
@@ -80,7 +85,33 @@ pub fn open_overlay(conf: *s.Snap_conf) *X11.Display {
     set_above();
 
     _ = X11.XMoveResizeWindow(g.dis, g.win, 0, 0, get_curr_display_width(), get_curr_display_height());
+
+    const color = get_color(g.margin_color);
+    _ = X11.XSetForeground(g.dis, g.gc, color);
+
+    draw_overlay_margins(conf, g.win);
+    _ = X11.XFlush(g.dis);
     return g.dis;
+}
+
+fn draw_overlay_margins(conf: *s.Snap_conf, win: X11.Window) void {
+    if (conf.left) |left| {
+        draw_overlay_margins(left, win);
+    }
+    if (conf.right) |right| {
+        draw_overlay_margins(right, win);
+    }
+    if (conf.left == null and conf.right == null) {
+        std.debug.print("Margins on pos {}\n", .{conf.pos});
+        const x: c_int = conf.pos.x;
+        const y: c_int = conf.pos.y;
+        const xw: c_int = conf.pos.x + @as(c_int, @intCast(conf.pos.w));
+        const yh: c_int = conf.pos.y + @as(c_int, @intCast(conf.pos.h));
+        _ = X11.XDrawLine(g.dis, win, g.gc, x, y, xw, y);
+        _ = X11.XDrawLine(g.dis, win, g.gc, xw, y, xw, yh);
+        _ = X11.XDrawLine(g.dis, win, g.gc, xw, yh, x, yh);
+        _ = X11.XDrawLine(g.dis, win, g.gc, x, yh, x, y);
+    }
 }
 
 fn get_color(color_string: [*]const u8) c_ulong {

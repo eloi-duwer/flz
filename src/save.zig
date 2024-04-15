@@ -73,6 +73,15 @@ pub fn save_to_conf(comptime Save_type: type, save: *const s.Save_conf, parent: 
             };
         },
         s.Snap_conf => {
+            const pos = switch (save.window_type) {
+                .ALL => s.Window_pos{ .x = 0, .y = 0, .w = win.get_curr_display_width(), .h = win.get_curr_display_height() },
+                // as checked earlier: all non .ALL windows have non null parent
+                .TOP => s.Window_pos{ .x = parent.?.pos.x, .y = parent.?.pos.y, .w = parent.?.pos.w, .h = c.calc_percent(u32, parent.?.pos.h, parent.?.percent) },
+                .BOTTOM => s.Window_pos{ .x = parent.?.pos.x + c.calc_percent(i32, parent.?.pos.h, parent.?.percent), .y = parent.?.pos.y, .w = parent.?.pos.w, .h = c.calc_percent(u32, parent.?.pos.h, 1 - parent.?.percent) },
+                .LEFT => s.Window_pos{ .x = parent.?.pos.x, .y = parent.?.pos.y, .w = c.calc_percent(u32, parent.?.pos.w, parent.?.percent), .h = parent.?.pos.h },
+                .RIGHT => s.Window_pos{ .x = parent.?.pos.x + c.calc_percent(i32, parent.?.pos.w, parent.?.percent), .y = parent.?.pos.y, .w = c.calc_percent(u32, parent.?.pos.w, 1 - parent.?.percent), .h = parent.?.pos.h },
+            };
+            conf.pos = pos; // We need to set the parent pos before recursing into left & right
             conf.* = s.Snap_conf{
                 .left = if (save.left) |_left| try save_to_conf(Save_type, _left, conf) else null,
                 .right = if (save.right) |_right| try save_to_conf(Save_type, _right, conf) else null,
@@ -80,16 +89,12 @@ pub fn save_to_conf(comptime Save_type: type, save: *const s.Save_conf, parent: 
                 .split_type = save.split_type,
                 .window_type = save.window_type,
                 .parent = parent,
-                .pos = switch (save.window_type) {
-                    .ALL => s.Window_pos{ .x = 0, .y = 0, .w = win.get_curr_display_width(), .h = win.get_curr_display_height() },
-                    // as checked earlier: all non .ALL windows have non null parent
-                    .TOP => s.Window_pos{ .x = parent.?.pos.x, .y = parent.?.pos.y, .w = parent.?.pos.w, .h = c.calc_percent(u32, parent.?.pos.h, parent.?.percent) },
-                    .BOTTOM => s.Window_pos{ .x = parent.?.pos.x + c.calc_percent(i32, parent.?.pos.h, parent.?.percent), .y = parent.?.pos.y, .w = parent.?.pos.w, .h = c.calc_percent(u32, parent.?.pos.h, 1 - parent.?.percent) },
-                    .LEFT => s.Window_pos{ .x = parent.?.pos.x, .y = parent.?.pos.y, .w = c.calc_percent(u32, parent.?.pos.w, parent.?.percent), .h = parent.?.pos.h },
-                    .RIGHT => s.Window_pos{ .x = parent.?.pos.x + c.calc_percent(i32, parent.?.pos.w, parent.?.percent), .y = parent.?.pos.y, .w = c.calc_percent(u32, parent.?.pos.w, 1 - parent.?.percent), .h = parent.?.pos.h },
-                },
+                .pos = pos,
                 .highlighted = false,
             };
+            if (parent) |_p| {
+                std.debug.print("conf parent pos {}, pos {}\n", .{ _p.pos, conf.pos });
+            }
         },
         else => @compileError("Can't parse type from save"),
     }

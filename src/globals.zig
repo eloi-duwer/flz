@@ -17,6 +17,7 @@ pub const min_size = 100;
 pub const resize_size = 50;
 pub const resize_half = resize_size / 2;
 pub const base_color: [*]const u8 = "#ffffff";
+pub const margin_color: [*]const u8 = "#000000";
 pub const NO_WINDOW = 0;
 
 pub fn get_defaults() !void {
