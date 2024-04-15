@@ -68,16 +68,18 @@ pub fn close_overlay() void {
 }
 
 pub fn open_overlay(conf: *s.Snap_conf) *X11.Display {
-    const white = X11.WhitePixel(g.dis, g.screen);
-    var v_info: X11.XVisualInfo = undefined;
-
-    _ = X11.XMatchVisualInfo(g.dis, g.screen, 32, X11.TrueColor, &v_info);
-    g.win = X11.XCreateSimpleWindow(g.dis, X11.DefaultRootWindow(g.dis), 0, 0, 42, 42, 42, white, get_color(g.base_color));
+    var xwa = std.mem.zeroes(X11.XSetWindowAttributes);
+    xwa.background_pixel = X11.WhitePixel(g.dis, g.screen);
+    xwa.event_mask = 0;
+    var vinfo: X11.XVisualInfo = undefined;
+    _ = X11.XMatchVisualInfo(g.dis, g.screen, 32, X11.TrueColor, &vinfo);
+    g.win = X11.XCreateWindow(g.dis, X11.DefaultRootWindow(g.dis), 0, 0, 42, 42, 0, X11.DefaultDepth(g.dis, g.screen), X11.InputOutput, g.vis, X11.CWEventMask | X11.CWBackPixel, &xwa);
 
     create_gc_margins();
 
     set_transparent(g.alpha_config, g.win);
     remove_window_interface();
+
     set_dont_intercept_inputs();
 
     _ = X11.XClearWindow(g.dis, g.win);
@@ -85,6 +87,8 @@ pub fn open_overlay(conf: *s.Snap_conf) *X11.Display {
     set_above();
 
     _ = X11.XMoveResizeWindow(g.dis, g.win, 0, 0, get_curr_display_width(), get_curr_display_height());
+
+    _ = X11.XFlush(g.dis);
 
     const color = get_color(g.margin_color);
     _ = X11.XSetForeground(g.dis, g.gc, color);
@@ -111,6 +115,7 @@ fn draw_overlay_margins(conf: *s.Snap_conf, win: X11.Window) void {
         _ = X11.XDrawLine(g.dis, win, g.gc, xw, y, xw, yh);
         _ = X11.XDrawLine(g.dis, win, g.gc, xw, yh, x, yh);
         _ = X11.XDrawLine(g.dis, win, g.gc, x, yh, x, y);
+        _ = X11.XDrawLine(g.dis, win, g.gc, 0, 0, 100, 100);
     }
 }
 
