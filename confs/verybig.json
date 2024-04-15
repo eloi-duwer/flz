@@ -1,0 +1,295 @@
+{
+  "window_type": "ALL",
+  "split_type": "VERTICAL",
+  "percent": 8.322265625e-01,
+  "left": {
+    "window_type": "LEFT",
+    "split_type": "VERTICAL",
+    "percent": 2.85546875e-01,
+    "left": {
+      "window_type": "LEFT",
+      "split_type": "VERTICAL",
+      "percent": 5.0e-01,
+      "left": {
+        "window_type": "LEFT",
+        "split_type": "NONE",
+        "percent": 0.0e+00,
+        "left": null,
+        "right": null
+      },
+      "right": {
+        "window_type": "RIGHT",
+        "split_type": "HORIZONTAL",
+        "percent": 5.0e-01,
+        "left": {
+          "window_type": "TOP",
+          "split_type": "NONE",
+          "percent": 0.0e+00,
+          "left": null,
+          "right": null
+        },
+        "right": {
+          "window_type": "BOTTOM",
+          "split_type": "HORIZONTAL",
+          "percent": 5.0e-01,
+          "left": {
+            "window_type": "TOP",
+            "split_type": "VERTICAL",
+            "percent": 5.0e-01,
+            "left": {
+              "window_type": "LEFT",
+              "split_type": "NONE",
+              "percent": 0.0e+00,
+              "left": null,
+              "right": null
+            },
+            "right": {
+              "window_type": "RIGHT",
+              "split_type": "NONE",
+              "percent": 0.0e+00,
+              "left": null,
+              "right": null
+            }
+          },
+          "right": {
+            "window_type": "BOTTOM",
+            "split_type": "NONE",
+            "percent": 0.0e+00,
+            "left": null,
+            "right": null
+          }
+        }
+      }
+    },
+    "right": {
+      "window_type": "RIGHT",
+      "split_type": "VERTICAL",
+      "percent": 1.4388961892247043e-01,
+      "left": {
+        "window_type": "LEFT",
+        "split_type": "NONE",
+        "percent": 0.0e+00,
+        "left": null,
+        "right": null
+      },
+      "right": {
+        "window_type": "RIGHT",
+        "split_type": "VERTICAL",
+        "percent": 5.70222563315426e-01,
+        "left": {
+          "window_type": "LEFT",
+          "split_type": "HORIZONTAL",
+          "percent": 5.0e-01,
+          "left": {
+            "window_type": "TOP",
+            "split_type": "VERTICAL",
+            "percent": 2.671118530884808e-01,
+            "left": {
+              "window_type": "LEFT",
+              "split_type": "NONE",
+              "percent": 0.0e+00,
+              "left": null,
+              "right": null
+            },
+            "right": {
+              "window_type": "RIGHT",
+              "split_type": "NONE",
+              "percent": 0.0e+00,
+              "left": null,
+              "right": null
+            }
+          },
+          "right": {
+            "window_type": "BOTTOM",
+            "split_type": "NONE",
+            "percent": 0.0e+00,
+            "left": null,
+            "right": null
+          }
+        },
+        "right": {
+          "window_type": "RIGHT",
+          "split_type": "HORIZONTAL",
+          "percent": 7.117052023121387e-01,
+          "left": {
+            "window_type": "TOP",
+            "split_type": "HORIZONTAL",
+            "percent": 2.0913705583756345e-01,
+            "left": {
+              "window_type": "TOP",
+              "split_type": "NONE",
+              "percent": 0.0e+00,
+              "left": null,
+              "right": null
+            },
+            "right": {
+              "window_type": "BOTTOM",
+              "split_type": "VERTICAL",
+              "percent": 6.464718460441911e-01,
+              "left": {
+                "window_type": "LEFT",
+                "split_type": "NONE",
+                "percent": 0.0e+00,
+                "left": null,
+                "right": null
+              },
+              "right": {
+                "window_type": "RIGHT",
+                "split_type": "NONE",
+                "percent": 0.0e+00,
+                "left": null,
+                "right": null
+              }
+            }
+          },
+          "right": {
+            "window_type": "BOTTOM",
+            "split_type": "VERTICAL",
+            "percent": 3.072916666666667e-01,
+            "left": {
+              "window_type": "LEFT",
+              "split_type": "HORIZONTAL",
+              "percent": 5.0e-01,
+              "left": {
+                "window_type": "TOP",
+                "split_type": "NONE",
+                "percent": 0.0e+00,
+                "left": null,
+                "right": null
+              },
+              "right": {
+                "window_type": "BOTTOM",
+                "split_type": "NONE",
+                "percent": 0.0e+00,
+                "left": null,
+                "right": null
+              }
+            },
+            "right": {
+              "window_type": "RIGHT",
+              "split_type": "NONE",
+              "percent": 0.0e+00,
+              "left": null,
+              "right": null
+            }
+          }
+        }
+      }
+    }
+  },
+  "right": {
+    "window_type": "RIGHT",
+    "split_type": "HORIZONTAL",
+    "percent": 5.0e-01,
+    "left": {
+      "window_type": "TOP",
+      "split_type": "VERTICAL",
+      "percent": 5.0e-01,
+      "left": {
+        "window_type": "LEFT",
+        "split_type": "VERTICAL",
+        "percent": 5.0e-01,
+        "left": {
+          "window_type": "LEFT",
+          "split_type": "NONE",
+          "percent": 0.0e+00,
+          "left": null,
+          "right": null
+        },
+        "right": {
+          "window_type": "RIGHT",
+          "split_type": "NONE",
+          "percent": 0.0e+00,
+          "left": null,
+          "right": null
+        }
+      },
+      "right": {
+        "window_type": "RIGHT",
+        "split_type": "NONE",
+        "percent": 0.0e+00,
+        "left": null,
+        "right": null
+      }
+    },
+    "right": {
+      "window_type": "BOTTOM",
+      "split_type": "HORIZONTAL",
+      "percent": 6.127167630057804e-01,
+      "left": {
+        "window_type": "TOP",
+        "split_type": "HORIZONTAL",
+        "percent": 5.0e-01,
+        "left": {
+          "window_type": "TOP",
+          "split_type": "VERTICAL",
+          "percent": 6.620825147347741e-01,
+          "left": {
+            "window_type": "LEFT",
+            "split_type": "VERTICAL",
+            "percent": 5.0e-01,
+            "left": {
+              "window_type": "LEFT",
+              "split_type": "NONE",
+              "percent": 0.0e+00,
+              "left": null,
+              "right": null
+            },
+            "right": {
+              "window_type": "RIGHT",
+              "split_type": "NONE",
+              "percent": 0.0e+00,
+              "left": null,
+              "right": null
+            }
+          },
+          "right": {
+            "window_type": "RIGHT",
+            "split_type": "NONE",
+            "percent": 0.0e+00,
+            "left": null,
+            "right": null
+          }
+        },
+        "right": {
+          "window_type": "BOTTOM",
+          "split_type": "NONE",
+          "percent": 0.0e+00,
+          "left": null,
+          "right": null
+        }
+      },
+      "right": {
+        "window_type": "BOTTOM",
+        "split_type": "VERTICAL",
+        "percent": 5.0e-01,
+        "left": {
+          "window_type": "LEFT",
+          "split_type": "VERTICAL",
+          "percent": 4.017681728880157e-01,
+          "left": {
+            "window_type": "LEFT",
+            "split_type": "NONE",
+            "percent": 0.0e+00,
+            "left": null,
+            "right": null
+          },
+          "right": {
+            "window_type": "RIGHT",
+            "split_type": "NONE",
+            "percent": 0.0e+00,
+            "left": null,
+            "right": null
+          }
+        },
+        "right": {
+          "window_type": "RIGHT",
+          "split_type": "NONE",
+          "percent": 0.0e+00,
+          "left": null,
+          "right": null
+        }
+      }
+    }
+  }
+}
