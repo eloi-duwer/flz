@@ -115,7 +115,7 @@ fn draw_overlay_margins(conf: *s.Snap_conf, win: X11.Window) void {
         _ = X11.XDrawLine(g.dis, win, g.gc, xw, y, xw, yh);
         _ = X11.XDrawLine(g.dis, win, g.gc, xw, yh, x, yh);
         _ = X11.XDrawLine(g.dis, win, g.gc, x, yh, x, y);
-        _ = X11.XDrawLine(g.dis, win, g.gc, 0, 0, 100, 100);
+        std.time.sleep(5_000_000); // why is this needed :(
     }
 }
 

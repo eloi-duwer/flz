@@ -81,7 +81,9 @@ pub fn save_to_conf(comptime Save_type: type, save: *const s.Save_conf, parent: 
                 .LEFT => s.Window_pos{ .x = parent.?.pos.x, .y = parent.?.pos.y, .w = c.calc_percent(u32, parent.?.pos.w, parent.?.percent), .h = parent.?.pos.h },
                 .RIGHT => s.Window_pos{ .x = parent.?.pos.x + c.calc_percent(i32, parent.?.pos.w, parent.?.percent), .y = parent.?.pos.y, .w = c.calc_percent(u32, parent.?.pos.w, 1 - parent.?.percent), .h = parent.?.pos.h },
             };
-            conf.pos = pos; // We need to set the parent pos before recursing into left & right
+            // We need to set the parent pos + percent before recursing into left & right
+            conf.pos = pos;
+            conf.percent = save.percent;
             conf.* = s.Snap_conf{
                 .left = if (save.left) |_left| try save_to_conf(Save_type, _left, conf) else null,
                 .right = if (save.right) |_right| try save_to_conf(Save_type, _right, conf) else null,
@@ -92,9 +94,6 @@ pub fn save_to_conf(comptime Save_type: type, save: *const s.Save_conf, parent: 
                 .pos = pos,
                 .highlighted = false,
             };
-            if (parent) |_p| {
-                std.debug.print("conf parent pos {}, pos {}\n", .{ _p.pos, conf.pos });
-            }
         },
         else => @compileError("Can't parse type from save"),
     }
