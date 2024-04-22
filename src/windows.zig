@@ -67,7 +67,7 @@ pub fn close_overlay() void {
     _ = X11.XDestroyWindow(g.dis, g.win);
 }
 
-pub fn open_overlay(conf: *s.Snap_conf) *X11.Display {
+pub fn open_overlay(conf: s.Snap_conf) *X11.Display {
     var xwa = std.mem.zeroes(X11.XSetWindowAttributes);
     xwa.background_pixel = X11.WhitePixel(g.dis, g.screen);
     xwa.event_mask = 0;
@@ -98,15 +98,14 @@ pub fn open_overlay(conf: *s.Snap_conf) *X11.Display {
     return g.dis;
 }
 
-fn draw_overlay_margins(conf: *s.Snap_conf, win: X11.Window) void {
+fn draw_overlay_margins(conf: s.Snap_conf, win: X11.Window) void {
     if (conf.left) |left| {
-        draw_overlay_margins(left, win);
+        draw_overlay_margins(left.*, win);
     }
     if (conf.right) |right| {
-        draw_overlay_margins(right, win);
+        draw_overlay_margins(right.*, win);
     }
     if (conf.left == null and conf.right == null) {
-        std.debug.print("Margins on pos {}\n", .{conf.pos});
         const x: c_int = conf.pos.x;
         const y: c_int = conf.pos.y;
         const xw: c_int = conf.pos.x + @as(c_int, @intCast(conf.pos.w));

@@ -17,10 +17,10 @@ pub fn main() !void {
     const save_file = args.next();
     const conf = try save.load_conf(s.Snap_conf, save_file);
 
-    loop(conf);
+    loop(conf.*);
 }
 
-fn loop(conf: *s.Snap_conf) noreturn {
+fn loop(conf: s.Snap_conf) noreturn {
     var ev: X11.XEvent = undefined;
     const cookie: *X11.XGenericEventCookie = &ev.xcookie;
     var state = s.Open_state{};
@@ -49,7 +49,7 @@ fn loop(conf: *s.Snap_conf) noreturn {
                         // Nothing
                     }
                     if (cookie.evtype == X11.XI_RawButtonRelease and button_pressed) {
-                        handle_button_release(&state);
+                        handle_button_release(&state, conf);
                     }
                 }
             }
@@ -70,7 +70,7 @@ fn loop(conf: *s.Snap_conf) noreturn {
 }
 
 // Open the overlay only if we're not already & if we're configuring while ctrl is down
-fn handle_open_snap(conf: *s.Snap_conf, state: *s.Open_state) void {
+fn handle_open_snap(conf: s.Snap_conf, state: *s.Open_state) void {
     if (!state.opened and state.configuring and state.ctrl_down) {
         state.opened = true;
         std.debug.print("Open\n", .{});
@@ -87,7 +87,7 @@ fn handle_ctrl_up(state: *s.Open_state) void {
     }
 }
 
-fn handle_button_release(state: *s.Open_state) void {
+fn handle_button_release(state: *s.Open_state, conf: s.Snap_conf) void {
     state.configuring = false;
     if (state.opened) {
         std.debug.print("Close\n", .{});
@@ -96,6 +96,7 @@ fn handle_button_release(state: *s.Open_state) void {
         // There's a conflict between X11 configuring the window & us moving it, waiting a bit before snapping
         std.time.sleep(10_000_000); // 0.01s
         const curr_focus_window = win.get_active_window();
+        _ = conf;
         snap.snap_window(curr_focus_window, &state.n_configuring);
         win.close_overlay();
     }
