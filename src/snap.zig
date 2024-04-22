@@ -4,14 +4,37 @@ const std = @import("std");
 const s = @import("structs.zig");
 const window = @import("windows.zig");
 
-pub fn snap_window(win: X11.Window, n_configuring: *u8) void {
+pub fn snap_window(win: X11.Window, _conf: s.Snap_conf, n_configuring: *u8) void {
     const pos = window.get_cursor_pos(g.root);
-    const area = get_workable_area();
 
-    const slice_size: i64 = @divTrunc(area.w, g.zone_count);
-    const win_group: i64 = @divTrunc(pos.x, slice_size);
+    if (find_backing_leaf_conf(_conf, pos)) |conf| {
+        snap_to_with_parents(n_configuring, win, conf.pos.x, conf.pos.y, conf.pos.w, conf.pos.h);
+    }
+}
 
-    snap_to_with_parents(n_configuring, win, win_group * slice_size, 0, slice_size, area.h);
+fn find_backing_leaf_conf(conf: s.Snap_conf, cursor_pos: s.Pos) ?s.Snap_conf {
+    if (conf.left == null and conf.right == null) {
+        const p = conf.pos;
+        if (p.x <= cursor_pos.x and @as(u32, @intCast(p.x)) + p.w >= cursor_pos.x and p.y <= cursor_pos.y and @as(u32, @intCast(p.y)) + p.h >= cursor_pos.y) {
+            return conf;
+        }
+        return null;
+    }
+
+    if (conf.left) |left| {
+        const l = find_backing_leaf_conf(left.*, cursor_pos);
+        if (l != null) {
+            return l;
+        }
+    }
+    var r: ?s.Snap_conf = null;
+    if (conf.right) |right| {
+        r = find_backing_leaf_conf(right.*, cursor_pos);
+        if (r != null) {
+            return r;
+        }
+    }
+    return null;
 }
 
 fn get_workable_area() s.Window_pos {
@@ -50,7 +73,6 @@ fn get_property_value(win: X11.Window, propname: [*]const u8, max_length: c_long
 fn snap_to_with_parents(n_configuring: *u8, win: X11.Window, x: i64, y: i64, width: i64, height: i64) void {
     (n_configuring.*) += 1;
     const margins = get_window_margin(win);
-    std.debug.print("Snapping {} to {} {} {} {}\n", .{ win, x, y, width, height });
     _ = X11.XMoveResizeWindow(g.dis, win, @intCast(x - margins.right), @intCast(y - margins.top), @intCast(width + margins.right + margins.left), @intCast(height + margins.top + margins.bottom));
     var parent: X11.Window = undefined;
     if (get_parent_window(win, &parent) == true and n_configuring.* < 100) {

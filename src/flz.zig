@@ -73,7 +73,6 @@ fn loop(conf: s.Snap_conf) noreturn {
 fn handle_open_snap(conf: s.Snap_conf, state: *s.Open_state) void {
     if (!state.opened and state.configuring and state.ctrl_down) {
         state.opened = true;
-        std.debug.print("Open\n", .{});
         _ = win.open_overlay(conf);
     }
 }
@@ -82,7 +81,6 @@ fn handle_ctrl_up(state: *s.Open_state) void {
     state.ctrl_down = false;
     if (state.opened) {
         state.opened = false;
-        std.debug.print("Cancel\n", .{});
         win.close_overlay();
     }
 }
@@ -90,14 +88,12 @@ fn handle_ctrl_up(state: *s.Open_state) void {
 fn handle_button_release(state: *s.Open_state, conf: s.Snap_conf) void {
     state.configuring = false;
     if (state.opened) {
-        std.debug.print("Close\n", .{});
         state.opened = false;
         state.n_configuring += 1;
         // There's a conflict between X11 configuring the window & us moving it, waiting a bit before snapping
         std.time.sleep(10_000_000); // 0.01s
         const curr_focus_window = win.get_active_window();
-        _ = conf;
-        snap.snap_window(curr_focus_window, &state.n_configuring);
+        snap.snap_window(curr_focus_window, conf, &state.n_configuring);
         win.close_overlay();
     }
 }
