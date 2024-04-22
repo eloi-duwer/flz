@@ -22,7 +22,7 @@ pub fn main() !void {
 
 fn loop(conf: *s.Snap_conf) noreturn {
     var ev: X11.XEvent = undefined;
-    var cookie: *X11.XGenericEventCookie = &ev.xcookie;
+    const cookie: *X11.XGenericEventCookie = &ev.xcookie;
     var state = s.Open_state{};
 
     const ctrll = X11.XKeysymToKeycode(g.dis, X11.XK_Control_L);

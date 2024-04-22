@@ -40,7 +40,7 @@ fn default_conf(comptime Save_type: type) !*Save_type {
 fn conf_to_save(conf: *const s.Window_conf) !*s.Save_conf {
     const left = if (conf.left) |_left| try conf_to_save(_left) else null;
     const right = if (conf.right) |_right| try conf_to_save(_right) else null;
-    var save = try a.allocator.create(s.Save_conf);
+    const save = try a.allocator.create(s.Save_conf);
     save.* = s.Save_conf{
         .left = left,
         .right = right,

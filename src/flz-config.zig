@@ -15,7 +15,7 @@ pub fn main() !void {
     _ = args.skip();
     try g.get_defaults();
     const save_file = args.next();
-    var conf = try save.load_conf(s.Window_conf, save_file);
+    const conf = try save.load_conf(s.Window_conf, save_file);
     g.register_xinput_2();
     g.init_fonts();
     win.create_config_win_global();
@@ -51,7 +51,7 @@ fn loop(conf: *s.Window_conf) !void {
                 }
             },
             X11.GenericEvent => {
-                var cookie: *X11.XGenericEventCookie = &ev.xcookie;
+                const cookie: *X11.XGenericEventCookie = &ev.xcookie;
                 if (X11.XGetEventData(g.dis, cookie) != 0 and cookie.extension == g.xi_opcode) {
                     if (cookie.evtype == X11.XI_RawMotion) {
                         if (configuring) |conf_resize| {
@@ -134,7 +134,7 @@ fn find_backing_conf(_conf: ?*s.Window_conf, window: X11.Window) ?*s.Window_conf
 fn remove_window(_conf: ?*s.Window_conf) void {
     if (_conf) |conf| {
         if (conf.parent) |parent| {
-            var pos = win.get_window_dimensions(parent.win);
+            const pos = win.get_window_dimensions(parent.win);
             clean_subwindows(parent, true);
             // /!\ conf has been freed by clean_subwindows, it's an freed reference at this point
             draw_margins(parent, parent.win, pos.w, pos.h);
@@ -280,7 +280,7 @@ fn update_win(parent: X11.Window, conf: *s.Window_conf, split: s.Split_type, sta
 }
 
 fn calc_window_needed_dimensions(parent: X11.Window, split: s.Split_type, start_percent: f64, end_percent: f64) s.Window_pos {
-    var parent_pos = win.get_window_dimensions(parent);
+    const parent_pos = win.get_window_dimensions(parent);
 
     if (split == .VERTICAL) {
         return s.Window_pos{
