@@ -26,7 +26,7 @@ pub fn create_config_win_global() void {
     _ = X11.XMoveResizeWindow(g.dis, g.win, 0, 0, get_curr_display_width(), get_curr_display_height());
 
     _ = X11.XFlush(g.dis);
-    std.time.sleep(30_000_000);
+    std.time.sleep(50_000_000);
     _ = X11.XSetInputFocus(g.dis, g.win, X11.RevertToParent, X11.CurrentTime);
 }
 
