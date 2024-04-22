@@ -77,7 +77,7 @@ pub fn save_to_conf(comptime Save_type: type, save: *const s.Save_conf, parent: 
                 .ALL => s.Window_pos{ .x = 0, .y = 0, .w = win.get_curr_display_width(), .h = win.get_curr_display_height() },
                 // as checked earlier: all non .ALL windows have non null parent
                 .TOP => s.Window_pos{ .x = parent.?.pos.x, .y = parent.?.pos.y, .w = parent.?.pos.w, .h = c.calc_percent(u32, parent.?.pos.h, parent.?.percent) },
-                .BOTTOM => s.Window_pos{ .x = parent.?.pos.x + c.calc_percent(i32, parent.?.pos.h, parent.?.percent), .y = parent.?.pos.y, .w = parent.?.pos.w, .h = c.calc_percent(u32, parent.?.pos.h, 1 - parent.?.percent) },
+                .BOTTOM => s.Window_pos{ .x = parent.?.pos.x, .y = parent.?.pos.y + c.calc_percent(i32, parent.?.pos.h, parent.?.percent), .w = parent.?.pos.w, .h = c.calc_percent(u32, parent.?.pos.h, 1 - parent.?.percent) },
                 .LEFT => s.Window_pos{ .x = parent.?.pos.x, .y = parent.?.pos.y, .w = c.calc_percent(u32, parent.?.pos.w, parent.?.percent), .h = parent.?.pos.h },
                 .RIGHT => s.Window_pos{ .x = parent.?.pos.x + c.calc_percent(i32, parent.?.pos.w, parent.?.percent), .y = parent.?.pos.y, .w = c.calc_percent(u32, parent.?.pos.w, 1 - parent.?.percent), .h = parent.?.pos.h },
             };
