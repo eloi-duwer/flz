@@ -12,6 +12,31 @@ pub fn snap_window(win: X11.Window, _conf: s.Snap_conf, n_configuring: *u8) void
     }
 }
 
+pub fn find_leaf_confs_near_cursor(conf: *const s.Snap_conf, cursor_pos: s.Pos) [5]?*const s.Snap_conf {
+    var ret: [5]?*const s.Snap_conf = .{null} ** 5;
+    var n_found: u8 = 0;
+
+    // Can't loop over -1..1 ;(
+    for (0..3) |_i| {
+        for (0..3) |_j| {
+            const i: i64 = @as(i64, @intCast(_i)) - 1;
+            const j: i64 = @as(i64, @intCast(_j)) - 1;
+            std.debug.print("{} {}\n", .{ i, j });
+            if ((j == 0 and i != 0) or (i == 0 and j != 0)) {
+                continue;
+            }
+            const new_pos = s.Pos{ .x = cursor_pos.x + g.snap_near_pos_margin * i, .y = cursor_pos.y + g.snap_near_pos_margin * i };
+            std.debug.print("{}\n", .{new_pos});
+            if (find_backing_leaf_conf(conf, new_pos)) |backing_conf| {
+                ret[n_found] = backing_conf;
+                n_found += 1;
+            }
+        }
+    }
+    std.debug.print("\n\n", .{});
+    return ret;
+}
+
 pub fn find_backing_leaf_conf(conf: *const s.Snap_conf, cursor_pos: s.Pos) ?*const s.Snap_conf {
     if (conf.left == null and conf.right == null) {
         const p = conf.pos;

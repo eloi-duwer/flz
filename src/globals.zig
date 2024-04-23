@@ -19,6 +19,7 @@ pub const resize_half = resize_size / 2;
 pub const base_color: [*]const u8 = "#ffffff";
 pub const margin_color: [*]const u8 = "#000000";
 pub const NO_WINDOW = 0;
+pub const snap_near_pos_margin = 50;
 
 pub fn get_defaults() !void {
     dis = X11.XOpenDisplay(null) orelse return error.InitializationError;
