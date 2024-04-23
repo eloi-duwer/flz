@@ -97,8 +97,6 @@ pub fn open_overlay(conf: s.Snap_conf) *X11.Display {
 
     draw_overlay_margins(conf, g.win);
     _ = X11.XFlush(g.dis);
-
-    _ = X11.XSetForeground(g.dis, g.gc, get_color(g.snap_color));
     return g.dis;
 }
 
