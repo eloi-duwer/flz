@@ -54,7 +54,7 @@ fn loop(conf: s.Snap_conf) noreturn {
                 }
             }
             if (cookie.evtype == X11.XI_RawMotion and state.opened) {
-                // handle_mouse_motion(cookie);
+                handle_mouse_motion(&state, conf);
             }
         }
         if (ev.type == X11.ConfigureNotify) {
@@ -95,5 +95,70 @@ fn handle_button_release(state: *s.Open_state, conf: s.Snap_conf) void {
         const curr_focus_window = win.get_active_window();
         snap.snap_window(curr_focus_window, conf, &state.n_configuring);
         win.close_overlay();
+    }
+}
+
+var prev_targetting_zones: [32]?*const s.Snap_conf = .{null} ** 32;
+
+fn handle_mouse_motion(state: *s.Open_state, conf: s.Snap_conf) void {
+    if (state.opened and g.win != g.NO_WINDOW) {
+        const cursor_pos = win.get_cursor_pos(g.root);
+        if (snap.find_backing_leaf_conf(&conf, cursor_pos)) |backing_conf| {
+            // TODO currenly we always have one element, find_backing should return all of the adjacent confs
+            // This should simplify a bit the code for prev_targetting_zones &such
+            const arrayed = [_]?*const s.Snap_conf{backing_conf};
+            var runtime_zero: usize = 0;
+            _ = &runtime_zero;
+            const sliced = arrayed[runtime_zero..arrayed.len]; // eeeew but we actually need a slice and not an array ???
+
+            if (has_target_changed(sliced)) {
+                for (prev_targetting_zones) |_zone| {
+                    if (_zone) |zone| {
+                        const p = zone.pos;
+                        const color = X11.XRenderColor{ .alpha = 0xFFFF, .blue = 0xFFFF, .green = 0xFFFF, .red = 0xFFFF };
+
+                        const format = X11.XRenderFindVisualFormat(g.dis, g.vis);
+                        const picture = X11.XRenderCreatePicture(g.dis, g.win, format, 0, null);
+
+                        X11.XRenderFillRectangle(g.dis, X11.PictOpSrc, picture, &color, p.x + g.margin / 2, p.y + g.margin / 2, p.w - g.margin, p.h - g.margin);
+                    }
+                }
+
+                copy_targets(sliced);
+                const p = backing_conf.pos;
+
+                const color = X11.XRenderColor{ .alpha = 0xFFFF, .blue = 0xFFFF, .green = 0x0, .red = 0x00 };
+
+                const format = X11.XRenderFindVisualFormat(g.dis, g.vis);
+                const picture = X11.XRenderCreatePicture(g.dis, g.win, format, 0, null);
+
+                X11.XRenderFillRectangle(g.dis, X11.PictOpSrc, picture, &color, p.x + g.margin / 2, p.y + g.margin / 2, p.w - g.margin, p.h - g.margin);
+            }
+        }
+    }
+}
+
+fn has_target_changed(targetting_zones: []const ?*const s.Snap_conf) bool {
+    for (targetting_zones, 0..) |zone, i| {
+        if (i == prev_targetting_zones.len) {
+            return false;
+        }
+        if (zone != prev_targetting_zones[i]) {
+            return true;
+        }
+    }
+    if (targetting_zones.len < prev_targetting_zones.len and prev_targetting_zones[targetting_zones.len] != null) {
+        return true;
+    }
+    return false;
+}
+
+fn copy_targets(targetting_zones: []const ?*const s.Snap_conf) void {
+    for (0..prev_targetting_zones.len) |i| {
+        if (i < targetting_zones.len) {
+            prev_targetting_zones[i] = targetting_zones[i];
+        } else {
+            prev_targetting_zones[i] = null;
+        }
     }
 }

@@ -11,7 +11,7 @@ pub var font: *X11.XftFont = undefined;
 
 pub const zone_count = 3;
 pub const margin = 20;
-pub const alpha_overlay = 0.3;
+pub const alpha_overlay = 0.4;
 pub const alpha_config = 0.7;
 pub const min_size = 100;
 pub const resize_size = 50;

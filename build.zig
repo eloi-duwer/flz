@@ -40,5 +40,6 @@ fn link_system_libs(compile_step: *std.Build.Step.Compile) void {
     compile_step.linkSystemLibrary("Xfixes");
     compile_step.linkSystemLibrary("Xi");
     compile_step.linkSystemLibrary("Xft");
+    compile_step.linkSystemLibrary("Xrender");
     compile_step.linkLibC();
 }

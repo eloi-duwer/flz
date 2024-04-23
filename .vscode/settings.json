@@ -11,5 +11,6 @@
         "xlib.h": "c",
         "flz-config.h": "c",
         "stdio.h": "c"
-    }
+    },
+    "cmake.configureOnOpen": true
 }

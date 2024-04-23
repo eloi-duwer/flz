@@ -7,12 +7,12 @@ const window = @import("windows.zig");
 pub fn snap_window(win: X11.Window, _conf: s.Snap_conf, n_configuring: *u8) void {
     const pos = window.get_cursor_pos(g.root);
 
-    if (find_backing_leaf_conf(_conf, pos)) |conf| {
+    if (find_backing_leaf_conf(&_conf, pos)) |conf| {
         snap_to_with_parents(n_configuring, win, conf.pos.x, conf.pos.y, conf.pos.w, conf.pos.h);
     }
 }
 
-fn find_backing_leaf_conf(conf: s.Snap_conf, cursor_pos: s.Pos) ?s.Snap_conf {
+pub fn find_backing_leaf_conf(conf: *const s.Snap_conf, cursor_pos: s.Pos) ?*const s.Snap_conf {
     if (conf.left == null and conf.right == null) {
         const p = conf.pos;
         if (p.x <= cursor_pos.x and @as(u32, @intCast(p.x)) + p.w >= cursor_pos.x and p.y <= cursor_pos.y and @as(u32, @intCast(p.y)) + p.h >= cursor_pos.y) {
@@ -22,14 +22,13 @@ fn find_backing_leaf_conf(conf: s.Snap_conf, cursor_pos: s.Pos) ?s.Snap_conf {
     }
 
     if (conf.left) |left| {
-        const l = find_backing_leaf_conf(left.*, cursor_pos);
+        const l = find_backing_leaf_conf(left, cursor_pos);
         if (l != null) {
             return l;
         }
     }
-    var r: ?s.Snap_conf = null;
     if (conf.right) |right| {
-        r = find_backing_leaf_conf(right.*, cursor_pos);
+        const r = find_backing_leaf_conf(right, cursor_pos);
         if (r != null) {
             return r;
         }

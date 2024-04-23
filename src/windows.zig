@@ -65,6 +65,7 @@ pub fn get_curr_display_height() c_uint {
 pub fn close_overlay() void {
     _ = X11.XFreeGC(g.dis, g.gc);
     _ = X11.XDestroyWindow(g.dis, g.win);
+    g.win = g.NO_WINDOW;
 }
 
 pub fn open_overlay(conf: s.Snap_conf) *X11.Display {
@@ -92,9 +93,12 @@ pub fn open_overlay(conf: s.Snap_conf) *X11.Display {
 
     const color = get_color(g.margin_color);
     _ = X11.XSetForeground(g.dis, g.gc, color);
+    _ = X11.XFlush(g.dis);
 
     draw_overlay_margins(conf, g.win);
     _ = X11.XFlush(g.dis);
+
+    _ = X11.XSetForeground(g.dis, g.gc, get_color(g.snap_color));
     return g.dis;
 }
 
@@ -118,7 +122,7 @@ fn draw_overlay_margins(conf: s.Snap_conf, win: X11.Window) void {
     }
 }
 
-fn get_color(color_string: [*]const u8) c_ulong {
+pub fn get_color(color_string: [*]const u8) c_ulong {
     var color: X11.XColor = undefined;
 
     const colormap = X11.DefaultColormap(g.dis, 0);

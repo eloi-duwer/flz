@@ -8,6 +8,7 @@
 #include <X11/extensions/shape.h>
 #include <X11/extensions/Xfixes.h>
 #include <X11/extensions/XInput2.h>
+#include <X11/extensions/Xrender.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
