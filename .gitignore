@@ -2,4 +2,5 @@ old_c_code/bin/*
 old_c_code/flz/obj
 old_c_code/flz-config/obj
 zig-cache/
+.zig-cache/
 zig-out/

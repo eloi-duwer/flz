@@ -7,7 +7,7 @@ pub fn build(b: *std.Build) void {
 
     const flz = b.addExecutable(.{
         .name = "flz",
-        .root_source_file = .{ .path = "src/flz.zig" },
+        .root_source_file = b.path("./src/flz.zig"),
         .target = target,
         .optimize = optimize,
     });
@@ -22,7 +22,12 @@ pub fn build(b: *std.Build) void {
     const run_step = b.step("flz", "Run flz");
     run_step.dependOn(&run_cmd.step);
 
-    const flz_config = b.addExecutable(.{ .name = "flz-config", .root_source_file = .{ .path = "src/flz-config.zig" }, .target = target, .optimize = optimize });
+    const flz_config = b.addExecutable(.{
+        .name = "flz-config",
+        .root_source_file = b.path("src/flz-config.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
     link_system_libs(flz_config);
     const install_flz_config_step = b.addInstallArtifact(flz_config, .{});
     b.getInstallStep().dependOn(&install_flz_config_step.step);
