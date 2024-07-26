@@ -110,7 +110,7 @@ fn handle_mouse_motion(state: *s.Open_state, conf: s.Snap_conf) void {
             for (prev_targetting_zones) |_zone| {
                 if (_zone) |zone| {
                     const p = zone.pos;
-                    const color = X11.XRenderColor{ .alpha = 0xFFFF, .blue = 0xFFFF, .green = 0xFFFF, .red = 0xFFFF };
+                    const color = win.calc_render_color(255, 255, 255, 255);
 
                     const format = X11.XRenderFindVisualFormat(g.dis, g.vis);
                     const picture = X11.XRenderCreatePicture(g.dis, g.win, format, 0, null);
@@ -124,7 +124,7 @@ fn handle_mouse_motion(state: *s.Open_state, conf: s.Snap_conf) void {
                 if (_backing_conf) |backing_conf| {
                     const p = backing_conf.pos;
 
-                    const color = X11.XRenderColor{ .alpha = 0xFFFF, .blue = 0xFFFF, .green = 0x0, .red = 0x00 };
+                    var color = win.calc_render_color(0, 0, 0, 255);
 
                     const format = X11.XRenderFindVisualFormat(g.dis, g.vis);
                     const picture = X11.XRenderCreatePicture(g.dis, g.win, format, 0, null);

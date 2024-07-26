@@ -184,3 +184,12 @@ pub fn get_cursor_pos(win_relative_to: X11.Window) s.Pos {
         .y = y,
     };
 }
+
+pub fn calc_render_color(red: u8, green: u8, blue: u8, alpha: u8) X11.XRenderColor {
+    return X11.XRenderColor{
+        .alpha = @as(c_ushort, alpha) * 256,
+        .red = @as(c_ushort, red) * 256,
+        .green = @as(c_ushort, green) * 256,
+        .blue = @as(c_ushort, blue) * 256,
+    };
+}

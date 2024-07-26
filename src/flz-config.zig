@@ -4,7 +4,6 @@ const g = @import("globals.zig");
 
 const win = @import("windows.zig");
 const s = @import("structs.zig");
-const print = @import("print.zig");
 const save = @import("save.zig");
 
 const a = @import("alloc.zig");
@@ -95,7 +94,6 @@ fn handle_click(conf_root: ?*s.Window_conf, target_win: X11.Window, button: c_ui
         const is_resize_clicked = conf.resize == target_win;
         if (is_resize_clicked) {
             if (button == X11.Button1) {
-                std.debug.print("Resize !!! {}\n", .{target_win});
                 return conf;
             }
         } else if (is_shift_pressed or button == X11.Button2) {
@@ -218,9 +216,6 @@ fn create_win(parent: X11.Window, conf: *s.Window_conf, split: s.Split_type, sta
 
     const window = X11.XCreateWindow(g.dis, parent, pos.x, pos.y, pos.w, pos.h, 0, X11.DefaultDepth(g.dis, g.screen), X11.InputOutput, g.vis, X11.CWEventMask | X11.CWBackPixel, &xwa);
 
-    std.debug.print("Created window {} with parent {}: x {} y {} w {} h {}\n", .{
-        window, parent, pos.x, pos.y, pos.w, pos.h,
-    });
     _ = X11.XMapWindow(g.dis, window);
     _ = X11.XFlush(g.dis);
     draw_margins(conf, window, pos.w, pos.h);
@@ -231,7 +226,7 @@ fn create_win(parent: X11.Window, conf: *s.Window_conf, split: s.Split_type, sta
 fn draw_window_size(window: X11.Window, pos: s.Window_pos) !void {
     const colormap = X11.DefaultColormap(g.dis, 0);
     const draw = X11.XftDrawCreate(g.dis, window, g.vis, colormap);
-    const color = X11.XRenderColor{ .alpha = 0xFFFF, .blue = 0x0, .green = 0x0, .red = 0xFFFF };
+    const color = win.calc_render_color(0x0, 0x0, 0xFF, 0xFF);
     var xft_color: X11.XftColor = undefined;
     _ = X11.XftColorAllocValue(g.dis, g.vis, colormap, &color, &xft_color);
 
