@@ -4,12 +4,31 @@ const std = @import("std");
 const s = @import("structs.zig");
 const window = @import("windows.zig");
 
-pub fn snap_window(win: X11.Window, _conf: s.Snap_conf, n_configuring: *u8) void {
-    const pos = window.get_cursor_pos(g.root);
+pub fn snap_window(win: X11.Window, n_configuring: *u8, zones: [5]?*const s.Snap_conf) void {
+    const pos = get_supersizing_zone(zones);
+    std.debug.print("Snapping to {}\n\n", .{pos});
 
-    if (find_backing_leaf_conf(&_conf, pos)) |conf| {
-        snap_to_with_parents(n_configuring, win, conf.pos.x, conf.pos.y, conf.pos.w, conf.pos.h);
+    snap_to_with_parents(n_configuring, win, pos.x, pos.y, pos.w, pos.h);
+}
+
+fn get_supersizing_zone(zones: [5]?*const s.Snap_conf) s.Window_pos {
+    var pos_top_left: s.Pos = .{ .x = std.math.maxInt(i64), .y = std.math.maxInt(i64) };
+    var pos_bot_right: s.Pos = .{ .x = 0, .y = 0 };
+
+    for (zones) |_zone| {
+        if (_zone) |zone| {
+            pos_top_left.x = @min(pos_top_left.x, zone.pos.x);
+            pos_top_left.y = @min(pos_top_left.y, zone.pos.y);
+            pos_bot_right.x = @max(pos_bot_right.x, zone.pos.x + @as(i32, @intCast(zone.pos.w)));
+            pos_bot_right.y = @max(pos_bot_right.y, zone.pos.y + @as(i32, @intCast(zone.pos.h)));
+        }
     }
+    return s.Window_pos{
+        .x = @intCast(pos_top_left.x),
+        .y = @intCast(pos_top_left.y),
+        .w = @intCast(pos_bot_right.x - pos_top_left.x),
+        .h = @intCast(pos_bot_right.y - pos_top_left.y),
+    };
 }
 
 pub fn find_leaf_confs_near_cursor(conf: *const s.Snap_conf, cursor_pos: s.Pos) [5]?*const s.Snap_conf {

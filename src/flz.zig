@@ -49,7 +49,7 @@ fn loop(conf: s.Snap_conf) noreturn {
                         // Nothing
                     }
                     if (cookie.evtype == X11.XI_RawButtonRelease and button_pressed) {
-                        handle_button_release(&state, conf);
+                        handle_button_release(&state);
                     }
                 }
             }
@@ -86,7 +86,7 @@ fn handle_ctrl_up(state: *s.Open_state) void {
     }
 }
 
-fn handle_button_release(state: *s.Open_state, conf: s.Snap_conf) void {
+fn handle_button_release(state: *s.Open_state) void {
     state.configuring = false;
     if (state.opened) {
         state.opened = false;
@@ -94,7 +94,7 @@ fn handle_button_release(state: *s.Open_state, conf: s.Snap_conf) void {
         // There's a conflict between X11 configuring the window & us moving it, waiting a bit before snapping
         std.time.sleep(10_000_000); // 0.01s
         const curr_focus_window = win.get_active_window();
-        snap.snap_window(curr_focus_window, conf, &state.n_configuring);
+        snap.snap_window(curr_focus_window, &state.n_configuring, prev_targetting_zones);
         win.close_overlay();
     }
 }
